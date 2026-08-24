@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TingPay – Web Interactive Testing Studio & Demo</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <!-- QR Code Generator Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="studio-layout">
+        <!-- LEFT: Control & Notification Simulator Panel -->
+        <aside class="simulator-sidebar">
+            <div class="brand-header">
+                <div class="brand-badge">
+                    <div class="pulse-dot"></div>
+                    <span>WEB DEMO & SIMULATOR</span>
+                </div>
+                <h1 class="brand-title">TingPay <span>Studio</span></h1>
+                <p class="brand-desc">Giả lập thử nghiệm trực tiếp tính năng Loa Thông Báo Nhận Tiền, VietQR và Matching Engine ngay trên trình duyệt.</p>
+            </div>
+
+            <!-- Simulator Control Box -->
+            <div class="control-box">
+                <div class="control-header">
+                    <span class="icon">🔔</span>
+                    <h3>Giả lập biến động số dư ngân hàng</h3>
+                </div>
+                <p class="control-tip">Bấm các nút dưới đây để bắn thông báo mẫu vào điện thoại giả lập:</p>
+
+                <div class="sim-actions-grid">
+                    <button class="btn-sim sim-mb" onclick="simulatePush('MB', 350000, 'TP8291 Nguyen Van A chuyen tien')">
+                        <div class="sim-btn-icon">MB</div>
+                        <div class="sim-btn-text">
+                            <strong>MBBank +350.000đ</strong>
+                            <small>Khớp mã đơn TP8291</small>
+                        </div>
+                    </button>
+
+                    <button class="btn-sim sim-vcb" onclick="simulatePush('VCB', 500000, 'VCB Digibank Ref TP1122')">
+                        <div class="sim-btn-icon">VCB</div>
+                        <div class="sim-btn-text">
+                            <strong>Vietcombank +500.000đ</strong>
+                            <small>Đúng số tiền 500k</small>
+                        </div>
+                    </button>
+
+                    <button class="btn-sim sim-tcb" onclick="simulatePush('TCB', 1250000, 'Giao dich +1.250.000 tai TK')">
+                        <div class="sim-btn-icon">TCB</div>
+                        <div class="sim-btn-text">
+                            <strong>Techcombank +1.250.000đ</strong>
+                            <small>Đơn giá trị cao</small>
+                        </div>
+                    </button>
+
+                    <button class="btn-sim sim-acb" onclick="simulatePush('ACB', 50000, 'ACB ONE chuyen tien cafe')">
+                        <div class="sim-btn-icon">ACB</div>
+                        <div class="sim-btn-text">
+                            <strong>ACB +50.000đ</strong>
+                            <small>Thanh toán nhanh</small>
+                        </div>
+                    </button>
+
+                    <button class="btn-sim sim-debit" onclick="simulatePush('MB', 100000, 'GD: -100,000VND Rut tien ATM', true)">
+                        <div class="sim-btn-icon">-</div>
+                        <div class="sim-btn-text">
+                            <strong>Giao dịch trừ tiền (-100k)</strong>
+                            <small>Bỏ qua không phát loa</small>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- Custom Push Input -->
+                <div class="custom-sim-card">
+                    <h4>Bắn thông báo tùy chỉnh</h4>
+                    <div class="form-group">
+                        <label>Ngân hàng & Số tiền (VND):</label>
+                        <div class="input-inline">
+                            <select id="customBank">
+                                <option value="MB">MBBank</option>
+                                <option value="VCB">Vietcombank</option>
+                                <option value="TCB">Techcombank</option>
+                                <option value="ACB">ACB</option>
+                                <option value="BIDV">BIDV</option>
+                                <option value="CTG">VietinBank</option>
+                            </select>
+                            <input type="number" id="customAmount" placeholder="VD: 75000" value="75000">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Nội dung thông báo ngân hàng:</label>
+                        <input type="text" id="customDesc" placeholder="Nội dung chuyển tiền" value="Chuyen khoan mua hang">
+                    </div>
+                    <button class="btn-primary" onclick="simulateCustomPush()">
+                        <span>Bắn thông báo vào app</span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </button>
+                </div>
+
+                <!-- Sound & TTS Settings -->
+                <div class="audio-settings-card">
+                    <h4>Loa & Giọng đọc tiếng Việt (TTS)</h4>
+                    <div class="audio-toggle-row">
+                        <span>Chế độ âm thanh:</span>
+                        <select id="webAudioMode" onchange="changeAudioMode()">
+                            <option value="TING_AND_AMOUNT">Tiếng Ting + Đọc số tiền</option>
+                            <option value="BANK_AND_AMOUNT">Tên ngân hàng + Đọc số tiền</option>
+                            <option value="TING_ONLY">Chỉ phát tiếng chuông Ting</option>
+                        </select>
+                    </div>
+                    <button class="btn-secondary" onclick="testSpeaker()">
+                        🔊 Bấm để nghe thử loa
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- CENTER: Phone Device Preview -->
+        <main class="phone-stage">
+            <div class="phone-device">
+                <!-- Phone Speaker & Notch -->
+                <div class="phone-notch">
+                    <div class="camera"></div>
+                    <div class="speaker"></div>
+                </div>
+
+                <!-- Android Status Bar -->
+                <div class="phone-status-bar">
+                    <span id="phoneTime">20:30</span>
+                    <div class="status-icons">
+                        <span>5G</span>
+                        <span>📶</span>
+                        <span>🔋 98%</span>
+                    </div>
+                </div>
+
+                <!-- Dynamic In-App Push Notification Banner -->
+                <div id="phoneNotiBanner" class="phone-noti-banner">
+                    <div class="noti-icon" id="notiIcon">MB</div>
+                    <div class="noti-content">
+                        <div class="noti-title-row">
+                            <strong id="notiTitle">Biến động số dư</strong>
+                            <small id="notiTime">Vừa xong</small>
+                        </div>
+                        <p id="notiText">TK: 0123456789 | GD: +350,000VND ...</p>
+                    </div>
+                </div>
+
+                <!-- Screen Content Router -->
+                <div class="screen-viewport">
+                    <!-- SCREEN 1: HOME -->
+                    <div id="screenHome" class="screen-view active">
+                        <div class="screen-header">
+                            <div>
+                                <h2 class="app-title">TingPay</h2>
+                                <span class="app-subtitle">Sẵn sàng nhận thanh toán</span>
+                            </div>
+                            <div class="service-pill active">
+                                <span class="dot"></span>
+                                <span>Đang lắng nghe</span>
+                            </div>
+                        </div>
+
+                        <!-- Today Revenue -->
+                        <div class="revenue-card">
+                            <div class="revenue-header">DOANH THU HÔM NAY</div>
+                            <div class="revenue-value" id="homeTodayRevenue">0 đ</div>
+                            <div class="revenue-meta">
+                                <div>
+                                    <small>Số giao dịch</small>
+                                    <strong id="homeTxCount">0 đơn</strong>
+                                </div>
+                                <div>
+                                    <small>TB / Đơn</small>
+                                    <strong id="homeAvgValue">0 đ</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Actions -->
+                        <div class="quick-actions-row">
+                            <button class="action-card action-qr" onclick="navigateTo('CreatePayment')">
+                                <div class="action-icon">📱</div>
+                                <strong>Tạo đơn QR</strong>
+                            </button>
+                            <button class="action-card action-pos" onclick="navigateTo('Cashier')">
+                                <div class="action-icon">💳</div>
+                                <strong>Thu ngân POS</strong>
+                            </button>
+                        </div>
+
+                        <!-- Active Bank Account -->
+                        <div class="bank-card-mini">
+                            <div class="bank-icon-box">🏛️</div>
+                            <div class="bank-info">
+                                <strong id="activeBankName">MBBank Quân Đội</strong>
+                                <small id="activeBankAccount">0123456789 • NGUYEN VAN A</small>
+                            </div>
+                            <span class="default-tag">Mặc định</span>
+                        </div>
+
+                        <!-- Recent Transactions -->
+                        <div class="section-title-row">
+                            <h3>Giao dịch gần đây</h3>
+                            <button class="btn-link" onclick="navigateTo('History')">Xem tất cả</button>
+                        </div>
+
+                        <div id="homeRecentList" class="tx-list">
+                            <div class="empty-state">Chưa có giao dịch nào hôm nay</div>
+                        </div>
+                    </div>
+
+                    <!-- SCREEN 2: CASHIER POS -->
+                    <div id="screenCashier" class="screen-view">
+                        <div class="pos-header">
+                            <div class="pos-title">
+                                <span class="pos-icon">💳</span>
+                                <strong>THU NGÂN POS</strong>
+                            </div>
+                            <button class="btn-exit-pos" onclick="navigateTo('Home')">✕ Thoát</button>
+                        </div>
+
+                        <div class="pos-display">
+                            <div class="pos-amount" id="posDisplayAmount">0 đ</div>
+                        </div>
+
+                        <!-- POS Dynamic QR Preview Box -->
+                        <div class="pos-qr-box" id="posQrBox">
+                            <div id="posQrCanvas" class="qr-canvas"></div>
+                            <div class="pos-qr-details">
+                                <small id="posBankLabel">MBBank • NGUYEN VAN A</small>
+                                <span id="posOrderCode" class="order-code-badge">MÃ: TP8291</span>
+                            </div>
+                        </div>
+
+                        <!-- Numeric Keypad -->
+                        <div class="pos-keypad">
+                            <button onclick="posPress('1')">1</button>
+                            <button onclick="posPress('2')">2</button>
+                            <button onclick="posPress('3')">3</button>
+                            <button onclick="posPress('4')">4</button>
+                            <button onclick="posPress('5')">5</button>
+                            <button onclick="posPress('6')">6</button>
+                            <button onclick="posPress('7')">7</button>
+                            <button onclick="posPress('8')">8</button>
+                            <button onclick="posPress('9')">9</button>
+                            <button onclick="posPress('000')">000</button>
+                            <button onclick="posPress('0')">0</button>
+                            <button class="btn-del" onclick="posDel()">⌫</button>
+                            <button class="btn-c" onclick="posClear()">C</button>
+                            <button class="btn-submit-pos" onclick="posSubmit()">TẠO QR</button>
+                        </div>
+                    </div>
+
+                    <!-- SCREEN 3: CREATE PAYMENT -->
+                    <div id="screenCreatePayment" class="screen-view">
+                        <div class="screen-header">
+                            <button class="btn-back" onclick="navigateTo('Home')">←</button>
+                            <h2 class="screen-title">Tạo đơn thanh toán</h2>
+                            <div></div>
+                        </div>
+
+                        <div class="create-pay-body">
+                            <div class="input-display-card">
+                                <label>SỐ TIỀN THANH TOÁN</label>
+                                <div class="amount-large" id="createPayDisplay">0 đ</div>
+                                <input type="text" id="createPayNote" class="note-input" placeholder="Ghi chú đơn hàng (Tùy chọn)">
+                            </div>
+
+                            <div class="pos-keypad create-keypad">
+                                <button onclick="createPayPress('1')">1</button>
+                                <button onclick="createPayPress('2')">2</button>
+                                <button onclick="createPayPress('3')">3</button>
+                                <button onclick="createPayPress('4')">4</button>
+                                <button onclick="createPayPress('5')">5</button>
+                                <button onclick="createPayPress('6')">6</button>
+                                <button onclick="createPayPress('7')">7</button>
+                                <button onclick="createPayPress('8')">8</button>
+                                <button onclick="createPayPress('9')">9</button>
+                                <button onclick="createPayPress('000')">000</button>
+                                <button onclick="createPayPress('0')">0</button>
+                                <button class="btn-del" onclick="createPayDel()">⌫</button>
+                                <button class="btn-c" onclick="createPayClear()">C</button>
+                                <button class="btn-submit-pos" onclick="generateAndShowQr()">XEM MÃ QR</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SCREEN 4: QR PAYMENT MODAL / SCREEN -->
+                    <div id="screenQrView" class="screen-view">
+                        <div class="screen-header">
+                            <button class="btn-back" onclick="navigateTo('Home')">←</button>
+                            <h2 class="screen-title">Quét mã thanh toán</h2>
+                            <div></div>
+                        </div>
+
+                        <div class="qr-screen-card">
+                            <div class="vietqr-header-tag">
+                                <strong>VietQR</strong>
+                                <span>NAPAS 247</span>
+                            </div>
+
+                            <div id="mainQrCanvas" class="qr-canvas-large"></div>
+
+                            <div class="qr-amount-text" id="qrScreenAmount">350.000 đ</div>
+                            <div class="qr-acc-info" id="qrScreenAcc">MBBank • 0123456789</div>
+                            <div class="qr-name-info" id="qrScreenName">NGUYEN VAN A</div>
+                            <div class="qr-desc-info" id="qrScreenDesc">Nội dung: TP8291</div>
+
+                            <div class="listening-pulse">
+                                <div class="pulse-ring"></div>
+                                <span>Đang chờ nhận chuyển khoản...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SCREEN 5: PAYMENT SUCCESS CELEBRATION -->
+                    <div id="screenSuccess" class="screen-view">
+                        <div class="success-wrap">
+                            <div class="success-icon-badge">✓</div>
+                            <h2 class="success-title">THANH TOÁN THÀNH CÔNG</h2>
+                            <div class="success-amount" id="successAmount">350.000 đ</div>
+                            
+                            <div class="success-details-card">
+                                <div class="row">
+                                    <span>Ngân hàng:</span>
+                                    <strong id="successBank">MBBank</strong>
+                                </div>
+                                <div class="row">
+                                    <span>Mã đơn:</span>
+                                    <strong id="successCode">TP8291</strong>
+                                </div>
+                                <div class="row">
+                                    <span>Trạng thái:</span>
+                                    <span class="status-paid">Đã nhận tiền</span>
+                                </div>
+                            </div>
+
+                            <button class="btn-primary btn-success-done" onclick="navigateTo('Home')">
+                                TIẾP TỤC ĐƠN MỚI
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- SCREEN 6: HISTORY -->
+                    <div id="screenHistory" class="screen-view">
+                        <div class="screen-header">
+                            <button class="btn-back" onclick="navigateTo('Home')">←</button>
+                            <h2 class="screen-title">Lịch sử giao dịch</h2>
+                            <div></div>
+                        </div>
+
+                        <div class="history-filter-bar">
+                            <button class="filter-pill active" onclick="filterHistory('ALL')">Tất cả</button>
+                            <button class="filter-pill" onclick="filterHistory('CREDIT')">Tiền vào (+)</button>
+                            <button class="filter-pill" onclick="filterHistory('DEBIT')">Tiền ra (-)</button>
+                        </div>
+
+                        <div id="historyFullList" class="tx-list history-list"></div>
+                    </div>
+
+                    <!-- SCREEN 7: STATISTICS -->
+                    <div id="screenStats" class="screen-view">
+                        <div class="screen-header">
+                            <button class="btn-back" onclick="navigateTo('Home')">←</button>
+                            <h2 class="screen-title">Báo cáo & Thống kê</h2>
+                            <div></div>
+                        </div>
+
+                        <div class="stats-card">
+                            <div class="revenue-header">TỔNG THU NHẬP</div>
+                            <div class="revenue-value" id="statsTotalRevenue">0 đ</div>
+                            <div class="stats-row">
+                                <div>
+                                    <small>Tổng đơn thành công</small>
+                                    <strong id="statsTotalCount">0 lượt</strong>
+                                </div>
+                                <div>
+                                    <small>Trung bình / đơn</small>
+                                    <strong id="statsAvgValue">0 đ</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h3 class="subheading">Theo ngân hàng</h3>
+                        <div id="statsBankList" class="stats-bank-list"></div>
+                    </div>
+
+                    <!-- SCREEN 8: SETTINGS -->
+                    <div id="screenSettings" class="screen-view">
+                        <div class="screen-header">
+                            <button class="btn-back" onclick="navigateTo('Home')">←</button>
+                            <h2 class="screen-title">Cài đặt hệ thống</h2>
+                            <div></div>
+                        </div>
+
+                        <div class="settings-list">
+                            <div class="setting-item">
+                                <div>
+                                    <strong>Quyền đọc thông báo</strong>
+                                    <small>Đang hoạt động (Web Simulator)</small>
+                                </div>
+                                <span class="badge-success">BẬT</span>
+                            </div>
+
+                            <div class="setting-item">
+                                <div>
+                                    <strong>Âm thanh nhận tiền</strong>
+                                    <small>Chuông Ting + Đọc số tiền (TTS)</small>
+                                </div>
+                                <button class="btn-test-sound" onclick="testSpeaker()">Nghe thử</button>
+                            </div>
+
+                            <div class="setting-item">
+                                <div>
+                                    <strong>Mã PIN thu ngân</strong>
+                                    <small>Bảo vệ thoát chế độ POS</small>
+                                </div>
+                                <span class="badge-neutral">1234</span>
+                            </div>
+
+                            <div class="app-version-box">
+                                <strong>TingPay v1.0.0</strong>
+                                <small>com.tinhocgenz.tingpay</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Navigation Bar -->
+                <nav class="phone-bottom-nav">
+                    <button class="nav-item active" onclick="navigateTo('Home')" id="navHome">
+                        <span class="nav-icon">🏠</span>
+                        <span class="nav-label">Trang chủ</span>
+                    </button>
+                    <button class="nav-item" onclick="navigateTo('CreatePayment')" id="navPayment">
+                        <span class="nav-icon">📱</span>
+                        <span class="nav-label">Tạo QR</span>
+                    </button>
+                    <button class="nav-item" onclick="navigateTo('History')" id="navHistory">
+                        <span class="nav-icon">📜</span>
+                        <span class="nav-label">Lịch sử</span>
+                    </button>
+                    <button class="nav-item" onclick="navigateTo('Stats')" id="navStats">
+                        <span class="nav-icon">📊</span>
+                        <span class="nav-label">Thống kê</span>
+                    </button>
+                    <button class="nav-item" onclick="navigateTo('Settings')" id="navSettings">
+                        <span class="nav-icon">⚙️</span>
+                        <span class="nav-label">Cài đặt</span>
+                    </button>
+                </nav>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
