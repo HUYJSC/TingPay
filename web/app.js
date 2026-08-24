@@ -25,6 +25,112 @@ const state = {
     audioContext: null
 };
 
+// -------------------------------------------------------------
+// Bộ Quản Lý Giọng Đọc Tiếng Việt Chuẩn Xác (TTS Engine)
+// -------------------------------------------------------------
+let cachedVietnameseVoice = null;
+
+function initVietnameseVoices() {
+    if (!('speechSynthesis' in window)) return;
+    const voices = window.speechSynthesis.getVoices();
+    
+    // Tìm giọng tiếng Việt ưu tiên: Google Tiếng Việt, Microsoft Hoài My, Nam Minh, hoặc bất kỳ giọng vi-VN nào
+    cachedVietnameseVoice = voices.find(v => v.lang === 'vi-VN' || v.lang === 'vi_VN') ||
+                            voices.find(v => v.lang.toLowerCase().startsWith('vi')) ||
+                            voices.find(v => v.name.toLowerCase().includes('vietnam') || v.name.toLowerCase().includes('tiếng việt'));
+
+    const voiceStatus = document.getElementById('voiceStatusInfo');
+    if (voiceStatus) {
+        if (cachedVietnameseVoice) {
+            voiceStatus.innerText = `Giọng đọc: ${cachedVietnameseVoice.name} (${cachedVietnameseVoice.lang})`;
+        } else {
+            voiceStatus.innerText = `Đang sử dụng bộ đọc tiếng Việt hệ thống (vi-VN)`;
+        }
+    }
+}
+
+if ('speechSynthesis' in window) {
+    initVietnameseVoices();
+    window.speechSynthesis.onvoiceschanged = initVietnameseVoices;
+}
+
+// Phát tiếng chuông "Ting" thanh thoát (Web Audio API)
+function playTingSound() {
+    try {
+        if (!state.audioContext) {
+            state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        const ctx = state.audioContext;
+        if (ctx.state === 'suspended') ctx.resume();
+
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(1760, ctx.currentTime);
+        osc1.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.6);
+
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(2637, ctx.currentTime);
+        osc2.frequency.exponentialRampToValueAtTime(1318, ctx.currentTime + 0.6);
+
+        gain.gain.setValueAtTime(0.75, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc1.start();
+        osc2.start();
+        osc1.stop(ctx.currentTime + 0.6);
+        osc2.stop(ctx.currentTime + 0.6);
+    } catch (e) {
+        console.warn("Lỗi Web Audio", e);
+    }
+}
+
+// Đọc to văn bản bằng giọng tiếng Việt tự nhiên
+function speakText(text) {
+    if (!('speechSynthesis' in window)) {
+        alert("Trình duyệt không hỗ trợ Web SpeechSynthesis");
+        return;
+    }
+
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'vi-VN';
+
+    if (!cachedVietnameseVoice) {
+        initVietnameseVoices();
+    }
+    if (cachedVietnameseVoice) {
+        utter.voice = cachedVietnameseVoice;
+    }
+
+    utter.rate = 0.95; // Tốc độ nói chuẩn, dễ nghe
+    utter.pitch = 1.0;
+    utter.volume = 1.0;
+
+    window.speechSynthesis.speak(utter);
+}
+
+function notifyAudio(amount, bankName) {
+    playTingSound();
+
+    if (state.audioMode === "TING_ONLY") return;
+
+    setTimeout(() => {
+        const words = numberToVietnameseWords(amount);
+        let speech = `Đã nhận ${words}`;
+        if (state.audioMode === "BANK_AND_AMOUNT" && bankName) {
+            speech = `${bankName}, nhận ${words}`;
+        }
+        speakText(speech);
+    }, 450);
+}
+
 // Thuật toán tính mã kiểm tra CRC16 CCITT-FALSE cho VietQR NAPAS
 function crc16(data) {
     let crc = 0xFFFF;
@@ -66,7 +172,7 @@ function generateVietQrPayload(bin, acc, amount, message) {
     return payload + crc16(payload);
 }
 
-// Chuyển đổi số tiền thành chữ tiếng Việt chuẩn cho giọng đọc TTS
+// Chuyển đổi số tiền thành chữ tiếng Việt chuẩn xác
 function numberToVietnameseWords(n) {
     if (n === 0) return "không đồng";
     const digits = ["không", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín"];
@@ -109,69 +215,6 @@ function numberToVietnameseWords(n) {
     }
 
     return words.join(" ") + " đồng";
-}
-
-// Phát tiếng chuông "Ting" thanh thoát (Web Audio API)
-function playTingSound() {
-    try {
-        if (!state.audioContext) {
-            state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        const ctx = state.audioContext;
-        if (ctx.state === 'suspended') ctx.resume();
-
-        const osc1 = ctx.createOscillator();
-        const osc2 = ctx.createOscillator();
-        const gain = ctx.createGain();
-
-        osc1.type = 'sine';
-        osc1.frequency.setValueAtTime(1760, ctx.currentTime);
-        osc1.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.6);
-
-        osc2.type = 'triangle';
-        osc2.frequency.setValueAtTime(2637, ctx.currentTime);
-        osc2.frequency.exponentialRampToValueAtTime(1318, ctx.currentTime + 0.6);
-
-        gain.gain.setValueAtTime(0.7, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
-
-        osc1.connect(gain);
-        osc2.connect(gain);
-        gain.connect(ctx.destination);
-
-        osc1.start();
-        osc2.start();
-        osc1.stop(ctx.currentTime + 0.6);
-        osc2.stop(ctx.currentTime + 0.6);
-    } catch (e) {
-        console.warn("Lỗi Web Audio", e);
-    }
-}
-
-// Đọc giọng nói tiếng Việt
-function speakText(text) {
-    if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const utter = new SpeechSynthesisUtterance(text);
-        utter.lang = 'vi-VN';
-        utter.rate = 1.0;
-        window.speechSynthesis.speak(utter);
-    }
-}
-
-function notifyAudio(amount, bankName) {
-    playTingSound();
-
-    if (state.audioMode === "TING_ONLY") return;
-
-    setTimeout(() => {
-        const words = numberToVietnameseWords(amount);
-        let speech = `Đã nhận ${words}`;
-        if (state.audioMode === "BANK_AND_AMOUNT" && bankName) {
-            speech = `${bankName}, nhận ${words}`;
-        }
-        speakText(speech);
-    }, 450);
 }
 
 // Chuyển đổi màn hình
@@ -280,7 +323,7 @@ function updateDashboard() {
     document.getElementById('statsTotalCount').innerText = `${state.txCount} lượt`;
     document.getElementById('statsAvgValue').innerText = state.txCount > 0 ? formatVnd(Math.round(state.todayRevenue / state.txCount)) : "0 đ";
 
-    // Phân bổ ngân hàng trong thống kê
+    // Phân bổ ngân hàng
     const bankMap = {};
     state.transactions.filter(t => t.type === 'CREDIT').forEach(t => {
         bankMap[t.bankCode] = (bankMap[t.bankCode] || 0) + t.amount;
@@ -345,7 +388,7 @@ function posClear() {
 }
 
 function posSubmit() {
-    // Đã tự động cập nhật ngay khi gõ
+    // Tự động sinh QR khi gõ
 }
 
 function renderPosQr() {
@@ -446,6 +489,7 @@ setInterval(() => {
 }, 1000);
 
 window.addEventListener('DOMContentLoaded', () => {
+    initVietnameseVoices();
     updateDashboard();
     renderPosQr();
 });
