@@ -1,8 +1,8 @@
 // =========================================================
-// TingPay – Web Interactive Engine & Simulator
+// TingPay – Bộ Xử Lý & Giả Lập Trải Nghiệm Trực Tuyến
 // =========================================================
 
-// State Management
+// Quản lý trạng thái ứng dụng
 const state = {
     todayRevenue: 0,
     txCount: 0,
@@ -25,7 +25,7 @@ const state = {
     audioContext: null
 };
 
-// CRC16 CCITT-FALSE for VietQR
+// Thuật toán tính mã kiểm tra CRC16 CCITT-FALSE cho VietQR NAPAS
 function crc16(data) {
     let crc = 0xFFFF;
     const bytes = new TextEncoder().encode(data);
@@ -42,7 +42,7 @@ function crc16(data) {
     return crc.toString(16).toUpperCase().padStart(4, '0');
 }
 
-// Generate VietQR EMVCo Payload
+// Xây dựng chuỗi VietQR chuẩn EMVCo Tag-Length-Value
 function generateVietQrPayload(bin, acc, amount, message) {
     const tlv = (tag, val) => tag + String(val.length).padStart(2, '0') + val;
 
@@ -66,7 +66,7 @@ function generateVietQrPayload(bin, acc, amount, message) {
     return payload + crc16(payload);
 }
 
-// Vietnamese Number to Words
+// Chuyển đổi số tiền thành chữ tiếng Việt chuẩn cho giọng đọc TTS
 function numberToVietnameseWords(n) {
     if (n === 0) return "không đồng";
     const digits = ["không", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín"];
@@ -111,7 +111,7 @@ function numberToVietnameseWords(n) {
     return words.join(" ") + " đồng";
 }
 
-// Audio Engine: Synthesizes real "Ting" chime & Speech
+// Phát tiếng chuông "Ting" thanh thoát (Web Audio API)
 function playTingSound() {
     try {
         if (!state.audioContext) {
@@ -120,17 +120,16 @@ function playTingSound() {
         const ctx = state.audioContext;
         if (ctx.state === 'suspended') ctx.resume();
 
-        // Bell chime fundamental + harmonic frequencies
         const osc1 = ctx.createOscillator();
         const osc2 = ctx.createOscillator();
         const gain = ctx.createGain();
 
         osc1.type = 'sine';
-        osc1.frequency.setValueAtTime(1760, ctx.currentTime); // A6 Note
+        osc1.frequency.setValueAtTime(1760, ctx.currentTime);
         osc1.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.6);
 
         osc2.type = 'triangle';
-        osc2.frequency.setValueAtTime(2637, ctx.currentTime); // E7 Note
+        osc2.frequency.setValueAtTime(2637, ctx.currentTime);
         osc2.frequency.exponentialRampToValueAtTime(1318, ctx.currentTime + 0.6);
 
         gain.gain.setValueAtTime(0.7, ctx.currentTime);
@@ -145,10 +144,11 @@ function playTingSound() {
         osc1.stop(ctx.currentTime + 0.6);
         osc2.stop(ctx.currentTime + 0.6);
     } catch (e) {
-        console.warn("Web Audio API error", e);
+        console.warn("Lỗi Web Audio", e);
     }
 }
 
+// Đọc giọng nói tiếng Việt
 function speakText(text) {
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
@@ -174,7 +174,7 @@ function notifyAudio(amount, bankName) {
     }, 450);
 }
 
-// Navigation & Screen Switcher
+// Chuyển đổi màn hình
 function navigateTo(screenId) {
     document.querySelectorAll('.screen-view').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -185,16 +185,15 @@ function navigateTo(screenId) {
     const navBtn = document.getElementById('nav' + screenId);
     if (navBtn) navBtn.classList.add('active');
 
-    // Auto refresh QR if navigating to POS
     if (screenId === 'Cashier') renderPosQr();
 }
 
-// Format Currency
+// Định dạng tiền tệ VNĐ
 function formatVnd(val) {
     return new Intl.NumberFormat('vi-VN').format(val) + " đ";
 }
 
-// Simulate Push Notification
+// Giả lập bắn thông báo biến động số dư
 function simulatePush(bankCode, amount, desc, isDebit = false) {
     const banner = document.getElementById('phoneNotiBanner');
     const icon = document.getElementById('notiIcon');
@@ -202,14 +201,13 @@ function simulatePush(bankCode, amount, desc, isDebit = false) {
     const text = document.getElementById('notiText');
 
     icon.innerText = bankCode;
-    title.innerText = isDebit ? `Ngân hàng ${bankCode} (-)` : `Ngân hàng ${bankCode} (+)`;
+    title.innerText = isDebit ? `Ngân hàng ${bankCode} (Trừ tiền)` : `Ngân hàng ${bankCode} (Cộng tiền)`;
     text.innerText = isDebit ? `TK: 0123456789 | GD: -${formatVnd(amount)} | ${desc}` : `TK: 0123456789 | GD: +${formatVnd(amount)} | ${desc}`;
 
     banner.classList.add('show');
     setTimeout(() => banner.classList.remove('show'), 3500);
 
     if (!isDebit) {
-        // Process Credit Transaction
         state.todayRevenue += amount;
         state.txCount += 1;
 
@@ -223,13 +221,9 @@ function simulatePush(bankCode, amount, desc, isDebit = false) {
         };
         state.transactions.unshift(tx);
 
-        // Update Dashboard
         updateDashboard();
-
-        // Audio & TTS
         notifyAudio(amount, bankCode);
 
-        // Check if QR payment screen is open -> Transition to Success Celebration
         const qrScreenActive = document.getElementById('screenQrView').classList.contains('active');
         const cashierActive = document.getElementById('screenCashier').classList.contains('active');
 
@@ -262,7 +256,6 @@ function updateDashboard() {
     document.getElementById('homeTxCount').innerText = `${state.txCount} đơn`;
     document.getElementById('homeAvgValue').innerText = state.txCount > 0 ? formatVnd(Math.round(state.todayRevenue / state.txCount)) : "0 đ";
 
-    // Update Recent List on Home
     const recentList = document.getElementById('homeRecentList');
     if (state.transactions.length === 0) {
         recentList.innerHTML = `<div class="empty-state">Chưa có giao dịch nào hôm nay</div>`;
@@ -281,13 +274,32 @@ function updateDashboard() {
         `).join('');
     }
 
-    // Update Full History
     filterHistory('ALL');
 
-    // Update Stats
     document.getElementById('statsTotalRevenue').innerText = formatVnd(state.todayRevenue);
     document.getElementById('statsTotalCount').innerText = `${state.txCount} lượt`;
     document.getElementById('statsAvgValue').innerText = state.txCount > 0 ? formatVnd(Math.round(state.todayRevenue / state.txCount)) : "0 đ";
+
+    // Phân bổ ngân hàng trong thống kê
+    const bankMap = {};
+    state.transactions.filter(t => t.type === 'CREDIT').forEach(t => {
+        bankMap[t.bankCode] = (bankMap[t.bankCode] || 0) + t.amount;
+    });
+
+    const statsBankList = document.getElementById('statsBankList');
+    if (Object.keys(bankMap).length === 0) {
+        statsBankList.innerHTML = `<div class="empty-state">Chưa có dữ liệu ngân hàng</div>`;
+    } else {
+        statsBankList.innerHTML = Object.entries(bankMap).map(([bank, total]) => `
+            <div class="tx-row">
+                <div class="tx-left">
+                    <div class="tx-badge">${bank}</div>
+                    <div><strong>Ngân hàng ${bank}</strong></div>
+                </div>
+                <div class="tx-amount text-success">${formatVnd(total)}</div>
+            </div>
+        `).join('');
+    }
 }
 
 function filterHistory(type) {
@@ -311,7 +323,7 @@ function filterHistory(type) {
     }
 }
 
-// POS Cashier Keypad Logic
+// Bàn phím thu ngân
 function posPress(val) {
     if (state.posInput.length < 9) {
         state.posInput += val;
@@ -333,7 +345,7 @@ function posClear() {
 }
 
 function posSubmit() {
-    // Already dynamic on typing
+    // Đã tự động cập nhật ngay khi gõ
 }
 
 function renderPosQr() {
@@ -358,7 +370,7 @@ function renderPosQr() {
     });
 }
 
-// Create Payment Keypad Logic
+// Bàn phím tạo đơn
 function createPayPress(val) {
     if (state.createPayInput.length < 9) {
         state.createPayInput += val;
@@ -378,7 +390,7 @@ function createPayClear() {
 
 function generateAndShowQr() {
     const amount = parseInt(state.createPayInput) || 0;
-    if (amount <= 0) return alert("Vui lòng nhập số tiền!");
+    if (amount <= 0) return alert("Vui lòng nhập số tiền hợp lệ!");
 
     state.currentOrder.amount = amount;
     state.currentOrder.desc = document.getElementById('createPayNote').value;
@@ -426,7 +438,7 @@ function changeAudioMode() {
     state.audioMode = document.getElementById('webAudioMode').value;
 }
 
-// Initialize clock & default data
+// Khởi tạo đồng hồ & dữ liệu ban đầu
 setInterval(() => {
     const now = new Date();
     const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
