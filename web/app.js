@@ -1,12 +1,12 @@
 // =========================================================
-// TingPay – Giao Diện MoMo & Bộ Chuyển Đổi Ngôn Ngữ & Giọng Đọc
+// TingPay – Giao Diện MoMo & Bộ Quản Lý Giọng Đọc Tiếng Việt
+// BẮT BUỘC: SỬ DỤNG vi-VN. TUYỆT ĐỐI KHÔNG FALLBACK TIẾNG ANH.
 // =========================================================
 
 const state = {
     todayRevenue: 0,
     txCount: 0,
     showRevenue: true,
-    appLanguage: "vi", // 'vi' hoặc 'en'
     activeBank: {
         code: "MoMo",
         name: "Ví MoMo",
@@ -27,125 +27,6 @@ const state = {
     transactions: [],
     audioContext: null
 };
-
-// Từ điển đa ngôn ngữ (I18N)
-const I18N = {
-    vi: {
-        badgeText: "BỘ CHUYỂN ĐỔI GIỌNG ĐỌC TIẾNG VIỆT",
-        brandDescText: "Hệ thống chuyển đổi số tiền thành giọng đọc tiếng Việt tự nhiên, tích hợp bộ phát âm thanh đa vùng miền và dự phòng thông minh.",
-        langSettingTitle: "Cài Đặt Ngôn Ngữ & Giọng Đọc",
-        lblAppLang: "Ngôn ngữ thông báo:",
-        lblVoiceSelect: "Giọng đọc tiếng Việt:",
-        lblSpeedSelect: "Tốc độ đọc:",
-        lblSentenceSelect: "Mẫu câu phát loa:",
-        lblPreviewTitle: "CÂU SẼ PHÁT QUA LOA:",
-        btnSpeakerTest: "🔊 Bấm để nghe thử giọng đọc ngay",
-        lblSimTitle: "Thử nhận tiền chuyển khoản",
-        lblCustomTitle: "Bắn thông báo tự nhập",
-        lblCustomBankAmount: "Nguồn & Số tiền nhận (VNĐ):",
-        lblCustomDesc: "Nội dung chuyển tiền:",
-        btnCustomPushText: "Bắn thông báo nhận tiền",
-        homeStoreSubtitle: "Cửa hàng thanh toán QR",
-        homeListeningText: "Đang nghe",
-        homeRevTitle: "Doanh thu hôm nay",
-        homeTxCountLabel: "Đơn thành công",
-        btnActQrText: "Nhận tiền QR",
-        btnActPosText: "Thu ngân POS",
-        btnActHistoryText: "Lịch sử GD",
-        btnActVoiceText: "Giọng đọc",
-        homeRecentTitle: "Lịch sử nhận tiền gần đây",
-        homeViewAllText: "Tất cả ›",
-        homeEmptyText: "Chưa có giao dịch nào hôm nay",
-        posTitleText: "CHẾ ĐỘ THU NGÂN NHANH",
-        posAmountLabel: "SỐ TIỀN NHẬP",
-        btnKeypadDel: "Xóa",
-        btnKeypadClear: "Làm lại",
-        btnKeypadSubmit: "TẠO MÃ QR",
-        createPayTitleText: "Tạo mã QR nhận tiền",
-        createPayAmountLabel: "SỐ TIỀN CẦN THU",
-        btnShowQrSubmit: "XEM MÃ QR",
-        qrScreenTitleText: "Mã QR Nhận Tiền",
-        successTitleText: "NHẬN TIỀN THÀNH CÔNG",
-        receiptBankLabel: "Nguồn chuyển:",
-        receiptCodeLabel: "Mã giao dịch:",
-        receiptTimeLabel: "Thời gian:",
-        btnSuccessDoneText: "TIẾP TỤC GIAO DỊCH",
-        historyTitleText: "Lịch sử giao dịch",
-        settingsTitleText: "Cài đặt giọng đọc tiếng Việt",
-        lblPhoneVoice: "Chọn giọng đọc tiếng Việt:",
-        lblPhoneSpeed: "Tốc độ giọng đọc:",
-        btnPhoneTestText: "🔊 Nghe thử giọng đọc ngay",
-        navLabelHome: "Trang chủ",
-        navLabelPayment: "Nhận tiền",
-        navLabelHistory: "Lịch sử",
-        navLabelVoice: "Giọng đọc"
-    },
-    en: {
-        badgeText: "VOICE & LANGUAGE CONVERTER",
-        brandDescText: "Converts transaction amount to natural Vietnamese / English voice with dual-tone MoMo chime.",
-        langSettingTitle: "Language & Voice Settings",
-        lblAppLang: "Notification Language:",
-        lblVoiceSelect: "Speech Voice Accent:",
-        lblSpeedSelect: "Reading Speed:",
-        lblSentenceSelect: "Speech Template:",
-        lblPreviewTitle: "AUDIO PREVIEW:",
-        btnSpeakerTest: "🔊 Click to test voice",
-        lblSimTitle: "Simulate Payment Notification",
-        lblCustomTitle: "Custom Bank Notification",
-        lblCustomBankAmount: "Bank & Amount (VND):",
-        lblCustomDesc: "Transfer Note:",
-        btnCustomPushText: "Simulate Payment",
-        homeStoreSubtitle: "Smart QR Merchant Store",
-        homeListeningText: "Listening",
-        homeRevTitle: "Today's Revenue",
-        homeTxCountLabel: "Success Orders",
-        btnActQrText: "Receive QR",
-        btnActPosText: "Cashier POS",
-        btnActHistoryText: "History",
-        btnActVoiceText: "Voice",
-        homeRecentTitle: "Recent Transactions",
-        homeViewAllText: "All ›",
-        homeEmptyText: "No transactions yet today",
-        posTitleText: "FAST CASHIER MODE",
-        posAmountLabel: "ENTERED AMOUNT",
-        btnKeypadDel: "Del",
-        btnKeypadClear: "Clear",
-        btnKeypadSubmit: "GENERATE QR",
-        createPayTitleText: "Create Payment QR",
-        createPayAmountLabel: "AMOUNT TO COLLECT",
-        btnShowQrSubmit: "SHOW QR CODE",
-        qrScreenTitleText: "Payment QR Code",
-        successTitleText: "PAYMENT RECEIVED",
-        receiptBankLabel: "Sender Bank:",
-        receiptCodeLabel: "Order Code:",
-        receiptTimeLabel: "Time:",
-        btnSuccessDoneText: "CONTINUE",
-        historyTitleText: "Transaction History",
-        settingsTitleText: "Voice & Audio Settings",
-        lblPhoneVoice: "Choose Vietnamese Voice:",
-        lblPhoneSpeed: "Reading Speed:",
-        btnPhoneTestText: "🔊 Test Voice Now",
-        navLabelHome: "Home",
-        navLabelPayment: "Receive",
-        navLabelHistory: "History",
-        navLabelVoice: "Voice"
-    }
-};
-
-// Đổi ngôn ngữ ứng dụng
-function setAppLanguage(lang) {
-    state.appLanguage = lang;
-    document.getElementById('btnLangVi').classList.toggle('active', lang === 'vi');
-    document.getElementById('btnLangEn').classList.toggle('active', lang === 'en');
-
-    const dict = I18N[lang];
-    for (const [key, text] of Object.entries(dict)) {
-        const el = document.getElementById(key);
-        if (el) el.innerText = text;
-    }
-
-    updateSpeechPreview();
-}
 
 // -------------------------------------------------------------
 // Âm thanh Ting Ting đặc trưng MoMo
@@ -189,13 +70,18 @@ function playMomoTingSound() {
 }
 
 // -------------------------------------------------------------
-// Bộ Quản Lý Giọng Đọc Đa Dạng
+// Bộ Quản Lý Giọng Đọc Tiếng Việt vi-VN BẮT BUỘC
 // -------------------------------------------------------------
 let availableVoices = [];
+let hasVietnameseVoice = false;
 
 function loadVoices() {
     if (!('speechSynthesis' in window)) return;
     availableVoices = window.speechSynthesis.getVoices();
+    
+    // Kiểm tra xem hệ thống có voice vi-VN / vi không
+    const viVoices = availableVoices.filter(v => v.lang === 'vi-VN' || v.lang === 'vi_VN' || v.lang.toLowerCase().startsWith('vi') || v.name.toLowerCase().includes('vietnam') || v.name.toLowerCase().includes('tiếng việt'));
+    hasVietnameseVoice = viVoices.length > 0;
 }
 
 if ('speechSynthesis' in window) {
@@ -203,33 +89,36 @@ if ('speechSynthesis' in window) {
     window.speechSynthesis.onvoiceschanged = loadVoices;
 }
 
-function getBestVoice(lang, genderPreference) {
+function getVietnameseVoice(genderPreference) {
     if (availableVoices.length === 0) loadVoices();
 
-    if (lang === 'vi') {
-        const viVoices = availableVoices.filter(v => v.lang === 'vi-VN' || v.lang === 'vi_VN' || v.lang.toLowerCase().startsWith('vi'));
-        if (viVoices.length > 0) {
-            if (genderPreference === 'MALE') {
-                const male = viVoices.find(v => v.name.toLowerCase().includes('nam') || v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('minh'));
-                if (male) return male;
-            } else if (genderPreference === 'FEMALE') {
-                const female = viVoices.find(v => v.name.toLowerCase().includes('nu') || v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('my') || v.name.toLowerCase().includes('mai'));
-                if (female) return female;
-            }
-            return viVoices[0];
-        }
-        return availableVoices.find(v => v.name.toLowerCase().includes('vietnam') || v.name.toLowerCase().includes('tiếng việt')) || null;
-    } else {
-        return availableVoices.find(v => v.lang.startsWith('en')) || null;
+    const viVoices = availableVoices.filter(v => v.lang === 'vi-VN' || v.lang === 'vi_VN' || v.lang.toLowerCase().startsWith('vi') || v.name.toLowerCase().includes('vietnam') || v.name.toLowerCase().includes('tiếng việt'));
+
+    if (viVoices.length === 0) {
+        return null; // Không có tiếng Việt -> trả về null, KHÔNG fallback tiếng Anh
     }
+
+    if (genderPreference === 'MALE') {
+        const male = viVoices.find(v => v.name.toLowerCase().includes('nam') || v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('minh'));
+        if (male) return male;
+    } else if (genderPreference === 'FEMALE') {
+        const female = viVoices.find(v => v.name.toLowerCase().includes('nu') || v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('my') || v.name.toLowerCase().includes('mai'));
+        if (female) return female;
+    }
+
+    return viVoices[0];
 }
 
+/**
+ * Phát giọng đọc tiếng Việt vi-VN.
+ * TUYỆT ĐỐI KHÔNG đọc tiếng Anh bồi khi thiếu gói tiếng Việt.
+ */
 function speakText(text) {
     if (!('speechSynthesis' in window)) return;
 
     window.speechSynthesis.cancel();
     const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = state.appLanguage === 'vi' ? 'vi-VN' : 'en-US';
+    utter.lang = 'vi-VN'; // BẮT BUỘC Locale vi-VN
 
     let pitch = 1.0;
     let rate = state.speechRate;
@@ -257,8 +146,17 @@ function speakText(text) {
             break;
     }
 
-    const voice = getBestVoice(state.appLanguage, gender);
-    if (voice) utter.voice = voice;
+    const voice = getVietnameseVoice(gender);
+    if (voice) {
+        utter.voice = voice;
+    } else {
+        // Nếu trình duyệt chưa load được voice vi-VN, kiểm tra lại một lần nữa
+        loadVoices();
+        const retryVoice = getVietnameseVoice(gender);
+        if (retryVoice) {
+            utter.voice = retryVoice;
+        }
+    }
 
     utter.pitch = pitch;
     utter.rate = rate;
@@ -268,18 +166,14 @@ function speakText(text) {
 }
 
 function buildSpokenSentence(amount, bankName) {
-    if (state.appLanguage === 'vi') {
-        const words = numberToVietnameseWords(amount);
-        switch (state.audioMode) {
-            case "FULL_MOMO": return `Bạn vừa nhận được ${words}`;
-            case "BANK_AND_AMOUNT":
-                const bName = bankName === "MoMo" ? "Ví MoMo" : bankName;
-                return `${bName}, nhận ${words}`;
-            case "TING_AND_AMOUNT":
-            default: return `Đã nhận ${words}`;
-        }
-    } else {
-        return `Received ${new Intl.NumberFormat('en-US').format(amount)} Vietnam Dong`;
+    const words = numberToVietnameseWords(amount);
+    switch (state.audioMode) {
+        case "FULL_MOMO": return `Bạn vừa nhận được ${words}`;
+        case "BANK_AND_AMOUNT":
+            const bName = bankName === "MoMo" ? "Ví MoMo" : bankName;
+            return `${bName}, nhận ${words}`;
+        case "TING_AND_AMOUNT":
+        default: return `Đã nhận ${words}`;
     }
 }
 
@@ -293,9 +187,12 @@ function updateSpeechPreview() {
 }
 
 function notifyAudio(amount, bankName) {
+    // 1. Luôn phát chuông Ting trước
     playMomoTingSound();
+
     if (state.audioMode === "TING_ONLY") return;
 
+    // 2. Sau đó phát âm thanh đọc số tiền bằng tiếng Việt vi-VN
     setTimeout(() => {
         const sentence = buildSpokenSentence(amount, bankName);
         speakText(sentence);
@@ -303,7 +200,7 @@ function notifyAudio(amount, bankName) {
 }
 
 // -------------------------------------------------------------
-// Chuyển Đổi Số Tiền Thành Chữ Tiếng Việt Chuẩn Xác
+// Chuyển Đổi Số Tiền Thành Chữ Tiếng Việt Chuẩn Xác (100% Tiếng Việt)
 // -------------------------------------------------------------
 function numberToVietnameseWords(amount) {
     if (amount === 0) return "không đồng";
@@ -469,8 +366,8 @@ function simulatePush(bankCode, amount, desc, isDebit = false) {
     const text = document.getElementById('notiText');
 
     icon.innerText = bankCode === "MoMo" ? "MoMo" : bankCode;
-    title.innerText = isDebit ? (state.appLanguage === 'vi' ? 'Thông báo trừ tiền' : 'Debit Alert') : (state.appLanguage === 'vi' ? 'Nhận tiền thành công' : 'Payment Received');
-    text.innerText = isDebit ? `TK: -${formatVnd(amount)} | ${desc}` : (state.appLanguage === 'vi' ? `Bạn vừa nhận được +${formatVnd(amount)} từ khách hàng` : `You received +${formatVnd(amount)}`);
+    title.innerText = isDebit ? 'Thông báo trừ tiền' : 'Nhận tiền thành công';
+    text.innerText = isDebit ? `TK: -${formatVnd(amount)} | ${desc}` : `Bạn vừa nhận được +${formatVnd(amount)} từ khách hàng`;
 
     banner.classList.add('show');
     setTimeout(() => banner.classList.remove('show'), 3800);
@@ -524,11 +421,11 @@ function simulateCustomPush() {
 function updateDashboard() {
     const revEl = document.getElementById('homeTodayRevenue');
     revEl.innerText = state.showRevenue ? formatVnd(state.todayRevenue) : "••••••• đ";
-    document.getElementById('homeTxCount').innerText = `${state.txCount} ${state.appLanguage === 'vi' ? 'đơn' : 'orders'}`;
+    document.getElementById('homeTxCount').innerText = `${state.txCount} đơn`;
 
     const recentList = document.getElementById('homeRecentList');
     if (state.transactions.length === 0) {
-        recentList.innerHTML = `<div class="empty-state">${I18N[state.appLanguage].homeEmptyText}</div>`;
+        recentList.innerHTML = `<div class="empty-state">Chưa có giao dịch nào hôm nay</div>`;
     } else {
         recentList.innerHTML = state.transactions.slice(0, 4).map(tx => `
             <div class="tx-row-momo">
@@ -549,7 +446,7 @@ function updateDashboard() {
     const fullList = document.getElementById('historyFullList');
     if (fullList) {
         if (state.transactions.length === 0) {
-            fullList.innerHTML = `<div class="empty-state">${I18N[state.appLanguage].homeEmptyText}</div>`;
+            fullList.innerHTML = `<div class="empty-state">Chưa có giao dịch nào</div>`;
         } else {
             fullList.innerHTML = state.transactions.map(tx => `
                 <div class="tx-row-momo">
@@ -633,7 +530,7 @@ function createPayClear() {
 
 function generateAndShowQr() {
     const amount = parseInt(state.createPayInput) || 0;
-    if (amount <= 0) return alert(state.appLanguage === 'vi' ? "Vui lòng nhập số tiền!" : "Please enter amount!");
+    if (amount <= 0) return alert("Vui lòng nhập số tiền!");
 
     state.currentOrder.amount = amount;
     state.currentOrder.desc = document.getElementById('createPayNote').value;
@@ -670,7 +567,7 @@ function showPaymentSuccess(amount, bank, code, timeStr) {
     document.getElementById('successAmount').innerText = formatVnd(amount);
     document.getElementById('successBank').innerText = bank === "MoMo" ? "Ví MoMo" : `Ngân hàng ${bank}`;
     document.getElementById('successCode').innerText = code || "POS";
-    document.getElementById('successTime').innerText = timeStr || (state.appLanguage === 'vi' ? "Vừa xong" : "Just now");
+    document.getElementById('successTime').innerText = timeStr || "Vừa xong";
     navigateTo('Success');
 }
 

@@ -11,6 +11,11 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
 
+/**
+ * AudioEngine điều phối âm thanh thông báo nhận tiền TingPay.
+ * Luôn phát âm thanh Ting trước, sau đó đọc số tiền bằng tiếng Việt (vi-VN).
+ * Tuyệt đối không phát tiếng Anh khi thiếu gói tiếng Việt.
+ */
 class AudioEngine(private val context: Context) {
 
     private val tingPlayer = TingPlayer(context)
@@ -35,20 +40,24 @@ class AudioEngine(private val context: Context) {
     }
 
     private suspend fun processPlayback(request: AudioPlaybackRequest) {
-        // 1. Phát chuông Ting trước
+        // 1. Luôn phát chuông Ting thanh thoát đầu tiên
         tingPlayer.playTing()
-        delay(380) // Khoảng nghỉ tự nhiên sau tiếng chuông
+        delay(380)
 
-        // Nếu chế độ là TING_ONLY hoặc thiết bị chưa có tiếng Việt -> Dừng sau tiếng Ting
+        // Nếu chế độ là TING_ONLY hoặc thiết bị chưa có gói tiếng Việt (vi-VN)
+        // -> Dừng ngay sau tiếng Ting, KHÔNG được đọc tiếng Anh hoặc ngôn ngữ khác
         if (request.config.mode == AudioNotificationMode.TING_ONLY || !ttsManager.isVietnameseSupported) {
+            if (!ttsManager.isVietnameseSupported) {
+                Log.w("AudioEngine", "Chỉ phát chuông Ting do thiết bị chưa cài đặt giọng nói tiếng Việt (vi-VN).")
+            }
             delay(200)
             return
         }
 
-        // 2. Chuyển đổi số tiền sang chữ tiếng Việt tự nhiên
+        // 2. Chuyển đổi số tiền sang chuỗi tiếng Việt tự nhiên (100% tiếng Việt)
         val amountWords = VietnameseMoneyFormatter.formatToWords(request.amount)
 
-        // 3. Xây dựng câu đọc tiếng Việt ngắn gọn, dễ nghe
+        // 3. Xây dựng câu đọc tiếng Việt
         val textToSpeak = when (request.config.mode) {
             AudioNotificationMode.TING_ONLY -> null
             AudioNotificationMode.TING_AND_AMOUNT -> {
@@ -59,7 +68,7 @@ class AudioEngine(private val context: Context) {
                 "${bankPrefix}nhận $amountWords"
             }
             AudioNotificationMode.FULL_SENTENCE -> {
-                request.customSentence ?: "Đã thanh toán thành công số tiền $amountWords"
+                request.customSentence ?: "Bạn vừa nhận được $amountWords"
             }
         }
 
@@ -74,12 +83,12 @@ class AudioEngine(private val context: Context) {
                 scope.launch { completionSignal.send(Unit) }
             }
 
-            // Chờ đọc xong hoặc tối đa 8 giây (timeout an toàn)
+            // Chờ đọc xong hoặc timeout an toàn
             withTimeoutOrNull(8000) {
                 completionSignal.receive()
             }
 
-            // Khoảng nghỉ giữa 2 giao dịch liên tiếp (300-500ms)
+            // Khoảng nghỉ giữa 2 giao dịch liên tiếp để không chồng tiếng
             delay(350)
         }
     }
@@ -104,7 +113,7 @@ class AudioEngine(private val context: Context) {
     }
 
     /**
-     * Thử âm thanh mẫu trong Settings
+     * Thử âm thanh mẫu trong Cài đặt
      */
     fun testVoice(sampleAmount: Long = 350000, bankName: String = "MBBank", config: AudioConfig = AudioConfig()) {
         enqueuePaymentAudio(sampleAmount, bankName, config)
