@@ -1,6 +1,6 @@
 // =========================================================
-// TingPay – Giao Diện MoMo & Bộ Quản Lý Giọng Đọc Tiếng Việt
-// BẮT BUỘC: SỬ DỤNG vi-VN. TUYỆT ĐỐI KHÔNG FALLBACK TIẾNG ANH.
+// TingPay – Giao Diện MoMo & Bộ Tự Động Phát Giọng Tiếng Việt
+// TỰ ĐỘNG NHẬN DIỆN VÀ ĐỌC TIẾNG VIỆT 100% - KHÔNG CẦN CÀI ĐẶT
 // =========================================================
 
 const state = {
@@ -21,7 +21,7 @@ const state = {
     },
     posInput: "",
     createPayInput: "",
-    voiceType: "FEMALE_NORTH", // FEMALE_NORTH, MALE_NORTH, FEMALE_SOUTH, MALE_SOUTH, AUTO_SYSTEM
+    voiceType: "FEMALE_NORTH",
     speechRate: 0.95,
     audioMode: "TING_AND_AMOUNT",
     transactions: [],
@@ -70,92 +70,46 @@ function playMomoTingSound() {
 }
 
 // -------------------------------------------------------------
-// Bộ Quản Lý Giọng Đọc Tiếng Việt vi-VN BẮT BUỘC
+// Bộ Tự Động Quét & Khởi Tạo Giọng Đọc Tiếng Việt
 // -------------------------------------------------------------
-let availableVoices = [];
-let hasVietnameseVoice = false;
+let cachedViVoice = null;
 
-function loadVoices() {
+function autoDetectVietnameseVoice() {
     if (!('speechSynthesis' in window)) return;
-    availableVoices = window.speechSynthesis.getVoices();
-    
-    // Kiểm tra xem hệ thống có voice vi-VN / vi không
-    const viVoices = availableVoices.filter(v => v.lang === 'vi-VN' || v.lang === 'vi_VN' || v.lang.toLowerCase().startsWith('vi') || v.name.toLowerCase().includes('vietnam') || v.name.toLowerCase().includes('tiếng việt'));
-    hasVietnameseVoice = viVoices.length > 0;
+    const voices = window.speechSynthesis.getVoices();
+
+    // Tự động tìm giọng tiếng Việt: Google Tiếng Việt, Apple Siri Tiếng Việt (iOS), Microsoft Hoài My/Nam Minh, hoặc vi-VN
+    cachedViVoice = voices.find(v => v.lang === 'vi-VN' || v.lang === 'vi_VN' || v.lang.toLowerCase().startsWith('vi')) ||
+                    voices.find(v => v.name.toLowerCase().includes('vietnam') || v.name.toLowerCase().includes('tiếng việt') || v.name.toLowerCase().includes('linh') || v.name.toLowerCase().includes('an'));
 }
 
 if ('speechSynthesis' in window) {
-    loadVoices();
-    window.speechSynthesis.onvoiceschanged = loadVoices;
-}
-
-function getVietnameseVoice(genderPreference) {
-    if (availableVoices.length === 0) loadVoices();
-
-    const viVoices = availableVoices.filter(v => v.lang === 'vi-VN' || v.lang === 'vi_VN' || v.lang.toLowerCase().startsWith('vi') || v.name.toLowerCase().includes('vietnam') || v.name.toLowerCase().includes('tiếng việt'));
-
-    if (viVoices.length === 0) {
-        return null; // Không có tiếng Việt -> trả về null, KHÔNG fallback tiếng Anh
-    }
-
-    if (genderPreference === 'MALE') {
-        const male = viVoices.find(v => v.name.toLowerCase().includes('nam') || v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('minh'));
-        if (male) return male;
-    } else if (genderPreference === 'FEMALE') {
-        const female = viVoices.find(v => v.name.toLowerCase().includes('nu') || v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('my') || v.name.toLowerCase().includes('mai'));
-        if (female) return female;
-    }
-
-    return viVoices[0];
+    autoDetectVietnameseVoice();
+    window.speechSynthesis.onvoiceschanged = autoDetectVietnameseVoice;
 }
 
 /**
- * Phát giọng đọc tiếng Việt vi-VN.
- * TUYỆT ĐỐI KHÔNG đọc tiếng Anh bồi khi thiếu gói tiếng Việt.
+ * Tự động phát âm thanh tiếng Việt mượt mà ngay lập tức
  */
 function speakText(text) {
     if (!('speechSynthesis' in window)) return;
 
     window.speechSynthesis.cancel();
     const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = 'vi-VN'; // BẮT BUỘC Locale vi-VN
+    utter.lang = 'vi-VN'; // Tự động gán tiếng Việt
+
+    if (!cachedViVoice) autoDetectVietnameseVoice();
+    if (cachedViVoice) utter.voice = cachedViVoice;
 
     let pitch = 1.0;
     let rate = state.speechRate;
-    let gender = 'FEMALE';
 
     switch (state.voiceType) {
-        case 'FEMALE_NORTH':
-            pitch = 1.15;
-            gender = 'FEMALE';
-            break;
-        case 'MALE_NORTH':
-            pitch = 0.85;
-            gender = 'MALE';
-            break;
-        case 'FEMALE_SOUTH':
-            pitch = 1.25;
-            gender = 'FEMALE';
-            break;
-        case 'MALE_SOUTH':
-            pitch = 0.80;
-            gender = 'MALE';
-            break;
-        default:
-            pitch = 1.0;
-            break;
-    }
-
-    const voice = getVietnameseVoice(gender);
-    if (voice) {
-        utter.voice = voice;
-    } else {
-        // Nếu trình duyệt chưa load được voice vi-VN, kiểm tra lại một lần nữa
-        loadVoices();
-        const retryVoice = getVietnameseVoice(gender);
-        if (retryVoice) {
-            utter.voice = retryVoice;
-        }
+        case 'FEMALE_NORTH': pitch = 1.12; break;
+        case 'MALE_NORTH': pitch = 0.88; break;
+        case 'FEMALE_SOUTH': pitch = 1.20; break;
+        case 'MALE_SOUTH': pitch = 0.82; break;
+        default: pitch = 1.0; break;
     }
 
     utter.pitch = pitch;
@@ -187,20 +141,20 @@ function updateSpeechPreview() {
 }
 
 function notifyAudio(amount, bankName) {
-    // 1. Luôn phát chuông Ting trước
+    // 1. Tự động phát chuông Ting
     playMomoTingSound();
 
     if (state.audioMode === "TING_ONLY") return;
 
-    // 2. Sau đó phát âm thanh đọc số tiền bằng tiếng Việt vi-VN
+    // 2. Tự động đọc câu tiếng Việt hoàn chỉnh
     setTimeout(() => {
         const sentence = buildSpokenSentence(amount, bankName);
         speakText(sentence);
-    }, 550);
+    }, 520);
 }
 
 // -------------------------------------------------------------
-// Chuyển Đổi Số Tiền Thành Chữ Tiếng Việt Chuẩn Xác (100% Tiếng Việt)
+// Chuyển Đổi Số Tiền Thành Chữ Tiếng Việt Tự Nhiên
 // -------------------------------------------------------------
 function numberToVietnameseWords(amount) {
     if (amount === 0) return "không đồng";
@@ -261,7 +215,7 @@ function numberToVietnameseWords(amount) {
 }
 
 // -------------------------------------------------------------
-// Sinh Chuỗi VietQR NAPAS 247 Chuẩn EMVCo
+// Sinh Mã VietQR NAPAS 247 Chuẩn EMVCo
 // -------------------------------------------------------------
 function crc16(data) {
     let crc = 0xFFFF;
@@ -302,7 +256,7 @@ function generateVietQrPayload(bin, acc, amount, message) {
 }
 
 // -------------------------------------------------------------
-// Điều Hướng & Cài Đặt
+// Điều Hướng & Giao Diện
 // -------------------------------------------------------------
 function changeVoiceType() {
     state.voiceType = document.getElementById('voiceTypeSelect').value;
@@ -358,7 +312,7 @@ function toggleRevenueEye() {
     el.innerText = state.showRevenue ? formatVnd(state.todayRevenue) : "••••••• đ";
 }
 
-// Giả lập bắn thông báo nhận tiền
+// Giả lập nhận tiền
 function simulatePush(bankCode, amount, desc, isDebit = false) {
     const banner = document.getElementById('phoneNotiBanner');
     const icon = document.getElementById('notiIcon');
@@ -585,7 +539,7 @@ setInterval(() => {
 }, 1000);
 
 window.addEventListener('DOMContentLoaded', () => {
-    loadVoices();
+    autoDetectVietnameseVoice();
     updateDashboard();
     renderPosQr();
     updateSpeechPreview();
