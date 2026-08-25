@@ -3,42 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TingPay – Loa Thông Báo Nhận Tiền Thông Minh & Mini POS</title>
+    <title>TingPay – Loa Thông Báo Nhận Tiền Phong Cách MoMo</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-    <!-- Thư viện tạo mã QR -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- QR Code Generator Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="studio-layout">
-        <!-- CỘT TRÁI: Bảng điều khiển giả lập thông báo ngân hàng -->
+        <!-- CỘT TRÁI: Bảng điều khiển giả lập bắn thông báo -->
         <aside class="simulator-sidebar">
             <div class="brand-header">
                 <div class="brand-badge">
                     <div class="pulse-dot"></div>
-                    <span>TRẢI NGHIỆM TRỰC TUYẾN</span>
+                    <span>PHONG CÁCH VÍ MOMO</span>
                 </div>
-                <h1 class="brand-title">TingPay <span>Việt Nam</span></h1>
-                <p class="brand-desc">Trợ lý loa thông báo nhận tiền thông minh dành cho hộ kinh doanh, quán cafe, nhà hàng và tiểu thương.</p>
+                <h1 class="brand-title">TingPay <span>MoMo Style</span></h1>
+                <p class="brand-desc">Trải nghiệm giao diện nhận tiền chuyển khoản, sinh mã VietQR và phát loa đọc tiền tiếng Việt chuẩn phong cách MoMo.</p>
             </div>
 
             <!-- Khung giả lập giao dịch -->
             <div class="control-box">
                 <div class="control-header">
-                    <span class="icon">🔔</span>
-                    <h3>Giả lập biến động số dư ngân hàng</h3>
+                    <span>⚡</span>
+                    <h3>Bắn thông báo nhận tiền thử nghiệm</h3>
                 </div>
-                <p class="control-tip">Bấm các nút dưới đây để thử phát thông báo nhận tiền vào điện thoại:</p>
 
                 <div class="sim-actions-grid">
+                    <button class="btn-sim sim-momo" onclick="simulatePush('MoMo', 50000, 'Khach chuyen tien ly tra sua')">
+                        <div class="sim-btn-icon">MoMo</div>
+                        <div class="sim-btn-text">
+                            <strong>Ví MoMo +50.000đ</strong>
+                            <small>Ly trà sữa trân châu</small>
+                        </div>
+                    </button>
+
                     <button class="btn-sim sim-mb" onclick="simulatePush('MB', 350000, 'TP8291 Nguyen Van A chuyen tien')">
                         <div class="sim-btn-icon">MB</div>
                         <div class="sim-btn-text">
                             <strong>MBBank +350.000đ</strong>
-                            <small>Khớp mã đơn hàng TP8291</small>
+                            <small>Khớp mã đơn TP8291</small>
                         </div>
                     </button>
 
@@ -46,7 +53,7 @@
                         <div class="sim-btn-icon">VCB</div>
                         <div class="sim-btn-text">
                             <strong>Vietcombank +500.000đ</strong>
-                            <small>Đúng số tiền đơn 500k</small>
+                            <small>Đơn hàng 500k</small>
                         </div>
                     </button>
 
@@ -54,23 +61,15 @@
                         <div class="sim-btn-icon">TCB</div>
                         <div class="sim-btn-text">
                             <strong>Techcombank +1.250.000đ</strong>
-                            <small>Hóa đơn ăn uống</small>
-                        </div>
-                    </button>
-
-                    <button class="btn-sim sim-acb" onclick="simulatePush('ACB', 50000, 'ACB ONE chuyen tien cafe')">
-                        <div class="sim-btn-icon">ACB</div>
-                        <div class="sim-btn-text">
-                            <strong>ACB +50.000đ</strong>
-                            <small>Thanh toán ly cafe</small>
+                            <small>Hóa đơn bàn tiệc</small>
                         </div>
                     </button>
 
                     <button class="btn-sim sim-debit" onclick="simulatePush('MB', 100000, 'GD: -100,000VND Rut tien ATM', true)">
                         <div class="sim-btn-icon">-</div>
                         <div class="sim-btn-text">
-                            <strong>Giao dịch trừ tiền (-100.000đ)</strong>
-                            <small>Tự động bỏ qua, không đọc loa</small>
+                            <strong>Giao dịch trừ tiền (-100k)</strong>
+                            <small>Bỏ qua, không đọc loa</small>
                         </div>
                     </button>
                 </div>
@@ -79,9 +78,10 @@
                 <div class="custom-sim-card">
                     <h4>Bắn thông báo tự nhập</h4>
                     <div class="form-group">
-                        <label>Ngân hàng & Số tiền nhận (VNĐ):</label>
+                        <label>Ngân hàng / Ví & Số tiền (VNĐ):</label>
                         <div class="input-inline">
                             <select id="customBank">
+                                <option value="MoMo">Ví MoMo</option>
                                 <option value="MB">MBBank</option>
                                 <option value="VCB">Vietcombank</option>
                                 <option value="TCB">Techcombank</option>
@@ -93,186 +93,193 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>Nội dung chuyển tiền của khách:</label>
-                        <input type="text" id="customDesc" placeholder="Nội dung chuyển tiền" value="Chuyen tien mua hang">
+                        <label>Nội dung chuyển tiền:</label>
+                        <input type="text" id="customDesc" placeholder="Nội dung chuyển tiền" value="Thanh toan don hang">
                     </div>
                     <button class="btn-primary" onclick="simulateCustomPush()">
-                        <span>Bắn thông báo vào ứng dụng</span>
+                        <span>Bắn thông báo nhận tiền</span>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                     </button>
                 </div>
 
-                <!-- Cài đặt giọng nói tiếng Việt -->
+                <!-- Cài đặt loa & giọng đọc -->
                 <div class="audio-settings-card">
                     <h4>Loa & Giọng đọc tiếng Việt (TTS)</h4>
                     <div class="audio-toggle-row">
                         <span>Chế độ âm thanh:</span>
                         <select id="webAudioMode" onchange="changeAudioMode()">
-                            <option value="TING_AND_AMOUNT">Tiếng Ting + Đọc số tiền (Mặc định)</option>
+                            <option value="TING_AND_AMOUNT">Chuông Ting + Đọc số tiền</option>
                             <option value="BANK_AND_AMOUNT">Tên ngân hàng + Đọc số tiền</option>
-                            <option value="TING_ONLY">Chỉ phát tiếng chuông Ting</option>
+                            <option value="TING_ONLY">Chỉ phát chuông Ting</option>
                         </select>
                     </div>
                     <button class="btn-secondary" onclick="testSpeaker()">
-                        🔊 Bấm để nghe thử loa thông báo
+                        🔊 Bấm để nghe thử loa Ting MoMo
                     </button>
                 </div>
             </div>
         </aside>
 
-        <!-- CỘT GIỮA: Màn hình điện thoại giả lập -->
+        <!-- CỘT GIỮA: Màn hình điện thoại phong cách MoMo -->
         <main class="phone-stage">
             <div class="phone-device">
-                <!-- Loa & Camera đỉnh máy -->
+                <!-- Notch -->
                 <div class="phone-notch">
                     <div class="camera"></div>
                     <div class="speaker"></div>
                 </div>
 
-                <!-- Thanh trạng thái điện thoại -->
+                <!-- Status Bar -->
                 <div class="phone-status-bar">
                     <span id="phoneTime">20:30</span>
                     <div class="status-icons">
                         <span>5G</span>
                         <span>📶</span>
-                        <span>🔋 98%</span>
+                        <span>🔋 100%</span>
                     </div>
                 </div>
 
-                <!-- Banner thông báo trượt xuống khi có tiền về -->
+                <!-- Banner thông báo đẩy MoMo Style -->
                 <div id="phoneNotiBanner" class="phone-noti-banner">
-                    <div class="noti-icon" id="notiIcon">MB</div>
+                    <div class="noti-icon" id="notiIcon">MoMo</div>
                     <div class="noti-content">
                         <div class="noti-title-row">
-                            <strong id="notiTitle">Biến động số dư</strong>
+                            <strong id="notiTitle">Nhận tiền thành công</strong>
                             <small id="notiTime">Vừa xong</small>
                         </div>
-                        <p id="notiText">TK: 0123456789 | GD: +350,000VND ...</p>
+                        <p id="notiText">Bạn vừa nhận được +50.000đ từ khách hàng</p>
                     </div>
                 </div>
 
-                <!-- Các màn hình ứng dụng -->
+                <!-- Screen Viewport -->
                 <div class="screen-viewport">
-                    <!-- MÀN HÌNH 1: TRANG CHỦ -->
+                    <!-- SCREEN 1: MOMO HOME -->
                     <div id="screenHome" class="screen-view active">
-                        <div class="screen-header">
-                            <div>
-                                <h2 class="app-title">TingPay</h2>
-                                <span class="app-subtitle">Sẵn sàng nhận thanh toán</span>
-                            </div>
-                            <div class="service-pill active">
-                                <span class="dot"></span>
-                                <span>Đang lắng nghe</span>
-                            </div>
-                        </div>
-
-                        <!-- Doanh thu hôm nay -->
-                        <div class="revenue-card">
-                            <div class="revenue-header">DOANH THU HÔM NAY</div>
-                            <div class="revenue-value" id="homeTodayRevenue">0 đ</div>
-                            <div class="revenue-meta">
-                                <div>
-                                    <small>Số giao dịch</small>
-                                    <strong id="homeTxCount">0 đơn</strong>
+                        <!-- MoMo Top Header -->
+                        <div class="momo-top-header">
+                            <div class="momo-user-row">
+                                <div class="momo-user-left">
+                                    <div class="momo-avatar">TP</div>
+                                    <div>
+                                        <div class="momo-user-name">TINGPAY STORE</div>
+                                        <div class="momo-user-status">Cửa hàng thanh toán QR</div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <small>TB / Đơn</small>
-                                    <strong id="homeAvgValue">0 đ</strong>
+                                <div class="momo-live-badge">
+                                    <div class="momo-live-dot"></div>
+                                    <span>Đang nghe</span>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Thao tác nhanh -->
-                        <div class="quick-actions-row">
-                            <button class="action-card action-qr" onclick="navigateTo('CreatePayment')">
-                                <div class="action-icon">📱</div>
-                                <strong>Tạo đơn QR</strong>
-                            </button>
-                            <button class="action-card action-pos" onclick="navigateTo('Cashier')">
-                                <div class="action-icon">💳</div>
-                                <strong>Thu ngân nhanh</strong>
-                            </button>
-                        </div>
-
-                        <!-- Tài khoản nhận tiền mặc định -->
-                        <div class="bank-card-mini">
-                            <div class="bank-icon-box">🏛️</div>
-                            <div class="bank-info">
-                                <strong id="activeBankName">Ngân hàng Quân Đội (MBBank)</strong>
-                                <small id="activeBankAccount">0123456789 • NGUYEN VAN A</small>
+                        <!-- MoMo Balance & Revenue Card -->
+                        <div class="momo-balance-card">
+                            <div class="balance-left">
+                                <div class="balance-title-row">
+                                    <span>Doanh thu hôm nay</span>
+                                    <button class="btn-eye" onclick="toggleRevenueEye()">👁️</button>
+                                </div>
+                                <div class="balance-value" id="homeTodayRevenue">0 đ</div>
                             </div>
-                            <span class="default-tag">Mặc định</span>
+                            <div class="balance-right">
+                                <small>Đơn thành công</small>
+                                <strong id="homeTxCount">0 đơn</strong>
+                            </div>
                         </div>
 
-                        <!-- Danh sách giao dịch gần nhất -->
-                        <div class="section-title-row">
-                            <h3>Giao dịch gần đây</h3>
-                            <button class="btn-link" onclick="navigateTo('History')">Xem tất cả</button>
+                        <!-- 4 Action Buttons MoMo Style -->
+                        <div class="momo-actions-grid">
+                            <button class="momo-action-item" onclick="navigateTo('CreatePayment')">
+                                <div class="momo-action-icon act-qr">📱</div>
+                                <span class="momo-action-label">Nhận tiền QR</span>
+                            </button>
+
+                            <button class="momo-action-item" onclick="navigateTo('Cashier')">
+                                <div class="momo-action-icon act-pos">💳</div>
+                                <span class="momo-action-label">Thu ngân POS</span>
+                            </button>
+
+                            <button class="momo-action-item" onclick="navigateTo('History')">
+                                <div class="momo-action-icon act-bank">📜</div>
+                                <span class="momo-action-label">Lịch sử GD</span>
+                            </button>
+
+                            <button class="momo-action-item" onclick="navigateTo('Stats')">
+                                <div class="momo-action-icon act-stats">📊</div>
+                                <span class="momo-action-label">Thống kê</span>
+                            </button>
                         </div>
 
-                        <div id="homeRecentList" class="tx-list">
-                            <div class="empty-state">Chưa có giao dịch nào hôm nay</div>
+                        <!-- Recent Transactions -->
+                        <div class="momo-section-card">
+                            <div class="section-head">
+                                <h3>Lịch sử nhận tiền gần đây</h3>
+                                <button class="btn-view-all" onclick="navigateTo('History')">Tất cả ›</button>
+                            </div>
+                            <div id="homeRecentList" class="tx-list">
+                                <div class="empty-state">Chưa có giao dịch nào hôm nay</div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- MÀN HÌNH 2: THU NGÂN POS NHANH -->
+                    <!-- SCREEN 2: CASHIER POS -->
                     <div id="screenCashier" class="screen-view">
-                        <div class="pos-header">
-                            <div class="pos-title">
-                                <span class="pos-icon">💳</span>
-                                <strong>CHẾ ĐỘ THU NGÂN</strong>
+                        <div class="screen-header-pink">
+                            <span>CHẾ ĐỘ THU NGÂN NHANH</span>
+                            <button class="btn-back-white" onclick="navigateTo('Home')">✕</button>
+                        </div>
+
+                        <div class="pos-momo-container">
+                            <div class="pos-display-card">
+                                <small>SỐ TIỀN NHẬP</small>
+                                <div class="pos-amount-text" id="posDisplayAmount">0 đ</div>
                             </div>
-                            <button class="btn-exit-pos" onclick="navigateTo('Home')">✕ Thoát</button>
-                        </div>
 
-                        <div class="pos-display">
-                            <div class="pos-amount" id="posDisplayAmount">0 đ</div>
-                        </div>
-
-                        <!-- Mã QR tự động cập nhật -->
-                        <div class="pos-qr-box" id="posQrBox">
-                            <div id="posQrCanvas" class="qr-canvas"></div>
-                            <div class="pos-qr-details">
-                                <small id="posBankLabel">MBBank • NGUYEN VAN A</small>
-                                <span id="posOrderCode" class="order-code-badge">MÃ ĐƠN: TP8291</span>
+                            <!-- Live VietQR Box -->
+                            <div class="pos-qr-box" id="posQrBox">
+                                <div id="posQrCanvas" class="qr-canvas"></div>
+                                <div class="pos-qr-details">
+                                    <small id="posBankLabel">MBBank • NGUYEN VAN A</small>
+                                    <span id="posOrderCode" class="order-code-badge">MÃ: TP8291</span>
+                                </div>
                             </div>
-                        </div>
 
-                        <!-- Bàn phím số chạm nhanh -->
-                        <div class="pos-keypad">
-                            <button onclick="posPress('1')">1</button>
-                            <button onclick="posPress('2')">2</button>
-                            <button onclick="posPress('3')">3</button>
-                            <button onclick="posPress('4')">4</button>
-                            <button onclick="posPress('5')">5</button>
-                            <button onclick="posPress('6')">6</button>
-                            <button onclick="posPress('7')">7</button>
-                            <button onclick="posPress('8')">8</button>
-                            <button onclick="posPress('9')">9</button>
-                            <button onclick="posPress('000')">000</button>
-                            <button onclick="posPress('0')">0</button>
-                            <button class="btn-del" onclick="posDel()">Xóa</button>
-                            <button class="btn-c" onclick="posClear()">Làm lại</button>
-                            <button class="btn-submit-pos" onclick="posSubmit()">TẠO MÃ QR</button>
+                            <!-- Numeric Keypad -->
+                            <div class="pos-keypad-grid">
+                                <button onclick="posPress('1')">1</button>
+                                <button onclick="posPress('2')">2</button>
+                                <button onclick="posPress('3')">3</button>
+                                <button onclick="posPress('4')">4</button>
+                                <button onclick="posPress('5')">5</button>
+                                <button onclick="posPress('6')">6</button>
+                                <button onclick="posPress('7')">7</button>
+                                <button onclick="posPress('8')">8</button>
+                                <button onclick="posPress('9')">9</button>
+                                <button onclick="posPress('000')">000</button>
+                                <button onclick="posPress('0')">0</button>
+                                <button class="btn-keypad-del" onclick="posDel()">Xóa</button>
+                                <button class="btn-keypad-c" onclick="posClear()">Làm lại</button>
+                                <button class="btn-keypad-submit" onclick="posSubmit()">TẠO MÃ QR</button>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- MÀN HÌNH 3: TẠO ĐƠN THANH TOÁN -->
+                    <!-- SCREEN 3: CREATE PAYMENT -->
                     <div id="screenCreatePayment" class="screen-view">
-                        <div class="screen-header">
-                            <button class="btn-back" onclick="navigateTo('Home')">←</button>
-                            <h2 class="screen-title">Tạo đơn thanh toán</h2>
+                        <div class="screen-header-pink">
+                            <button class="btn-back-white" onclick="navigateTo('Home')">←</button>
+                            <span>Tạo mã QR nhận tiền</span>
                             <div></div>
                         </div>
 
-                        <div class="create-pay-body">
-                            <div class="input-display-card">
-                                <label>SỐ TIỀN THANH TOÁN</label>
-                                <div class="amount-large" id="createPayDisplay">0 đ</div>
+                        <div class="pos-momo-container">
+                            <div class="pos-display-card">
+                                <small>SỐ TIỀN CẦN THU</small>
+                                <div class="pos-amount-text" id="createPayDisplay">0 đ</div>
                                 <input type="text" id="createPayNote" class="note-input" placeholder="Ghi chú đơn hàng (Tùy chọn)">
                             </div>
 
-                            <div class="pos-keypad create-keypad">
+                            <div class="pos-keypad-grid">
                                 <button onclick="createPayPress('1')">1</button>
                                 <button onclick="createPayPress('2')">2</button>
                                 <button onclick="createPayPress('3')">3</button>
@@ -284,155 +291,140 @@
                                 <button onclick="createPayPress('9')">9</button>
                                 <button onclick="createPayPress('000')">000</button>
                                 <button onclick="createPayPress('0')">0</button>
-                                <button class="btn-del" onclick="createPayDel()">Xóa</button>
-                                <button class="btn-c" onclick="createPayClear()">Làm lại</button>
-                                <button class="btn-submit-pos" onclick="generateAndShowQr()">XEM MÃ QR</button>
+                                <button class="btn-keypad-del" onclick="createPayDel()">Xóa</button>
+                                <button class="btn-keypad-c" onclick="createPayClear()">Làm lại</button>
+                                <button class="btn-keypad-submit" onclick="generateAndShowQr()">XEM MÃ QR</button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- MÀN HÌNH 4: HIỂN THỊ VIETQR -->
+                    <!-- SCREEN 4: MOMO QR CARD VIEW -->
                     <div id="screenQrView" class="screen-view">
-                        <div class="screen-header">
-                            <button class="btn-back" onclick="navigateTo('Home')">←</button>
-                            <h2 class="screen-title">Quét mã chuyển khoản</h2>
+                        <div class="screen-header-pink">
+                            <button class="btn-back-white" onclick="navigateTo('Home')">←</button>
+                            <span>Mã QR Nhận Tiền</span>
                             <div></div>
                         </div>
 
-                        <div class="qr-screen-card">
-                            <div class="vietqr-header-tag">
-                                <strong>VietQR</strong>
-                                <span>NAPAS 247</span>
-                            </div>
+                        <div class="momo-qr-wrapper">
+                            <div class="momo-qr-card">
+                                <div class="qr-header-user">
+                                    <div class="qr-avatar-small">TP</div>
+                                    <div class="qr-user-info">
+                                        <strong id="qrScreenName">NGUYEN VAN A</strong>
+                                        <small id="qrScreenAcc">MBBank • 0123456789</small>
+                                    </div>
+                                </div>
 
-                            <div id="mainQrCanvas" class="qr-canvas-large"></div>
+                                <div class="qr-frame-box">
+                                    <div id="mainQrCanvas"></div>
+                                </div>
 
-                            <div class="qr-amount-text" id="qrScreenAmount">350.000 đ</div>
-                            <div class="qr-acc-info" id="qrScreenAcc">MBBank • 0123456789</div>
-                            <div class="qr-name-info" id="qrScreenName">NGUYEN VAN A</div>
-                            <div class="qr-desc-info" id="qrScreenDesc">Nội dung: TP8291</div>
+                                <div class="qr-price-tag" id="qrScreenAmount">350.000 đ</div>
+                                <div class="qr-order-code" id="qrScreenDesc">MÃ ĐƠN: TP8291</div>
 
-                            <div class="listening-pulse">
-                                <div class="pulse-ring"></div>
-                                <span>Đang chờ nhận chuyển khoản...</span>
+                                <div class="qr-footer-badges">
+                                    <span>VietQR</span> • <span>Napas247</span> • <span>MoMo</span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- MÀN HÌNH 5: BÁO THÀNH CÔNG -->
+                    <!-- SCREEN 5: PAYMENT SUCCESS MOMO STYLE -->
                     <div id="screenSuccess" class="screen-view">
-                        <div class="success-wrap">
-                            <div class="success-icon-badge">✓</div>
-                            <h2 class="success-title">THANH TOÁN THÀNH CÔNG</h2>
-                            <div class="success-amount" id="successAmount">350.000 đ</div>
-                            
-                            <div class="success-details-card">
-                                <div class="row">
-                                    <span>Ngân hàng nhận:</span>
-                                    <strong id="successBank">MBBank</strong>
+                        <div class="success-momo-wrap">
+                            <div class="success-badge-pink">✓</div>
+                            <div class="success-title-text">NHẬN TIỀN THÀNH CÔNG</div>
+                            <div class="success-amount-text" id="successAmount">350.000 đ</div>
+
+                            <div class="success-receipt-card">
+                                <div class="receipt-row">
+                                    <span>Nguồn chuyển:</span>
+                                    <strong id="successBank">Ví MoMo</strong>
                                 </div>
-                                <div class="row">
-                                    <span>Mã đơn hàng:</span>
+                                <div class="receipt-row">
+                                    <span>Mã giao dịch:</span>
                                     <strong id="successCode">TP8291</strong>
                                 </div>
-                                <div class="row">
-                                    <span>Trạng thái:</span>
-                                    <span class="status-paid">Đã nhận đủ tiền</span>
+                                <div class="receipt-row">
+                                    <span>Thời gian:</span>
+                                    <strong id="successTime">Vừa xong</strong>
                                 </div>
                             </div>
 
-                            <button class="btn-primary btn-success-done" onclick="navigateTo('Home')">
-                                TIẾP TỤC ĐƠN MỚI
+                            <button class="btn-primary" style="width: 100%;" onclick="navigateTo('Home')">
+                                TIẾP TỤC GIAO DỊCH
                             </button>
                         </div>
                     </div>
 
-                    <!-- MÀN HÌNH 6: LỊCH SỬ -->
+                    <!-- SCREEN 6: HISTORY -->
                     <div id="screenHistory" class="screen-view">
-                        <div class="screen-header">
-                            <button class="btn-back" onclick="navigateTo('Home')">←</button>
-                            <h2 class="screen-title">Lịch sử giao dịch</h2>
+                        <div class="screen-header-pink">
+                            <button class="btn-back-white" onclick="navigateTo('Home')">←</button>
+                            <span>Lịch sử giao dịch</span>
                             <div></div>
                         </div>
 
-                        <div class="history-filter-bar">
-                            <button class="filter-pill active" onclick="filterHistory('ALL')">Tất cả</button>
-                            <button class="filter-pill" onclick="filterHistory('CREDIT')">Tiền vào (+)</button>
-                            <button class="filter-pill" onclick="filterHistory('DEBIT')">Tiền ra (-)</button>
+                        <div class="momo-section-card" style="margin-top: 16px;">
+                            <div id="historyFullList" class="tx-list"></div>
                         </div>
-
-                        <div id="historyFullList" class="tx-list history-list"></div>
                     </div>
 
-                    <!-- MÀN HÌNH 7: BÁO CÁO THỐNG KÊ -->
+                    <!-- SCREEN 7: STATS -->
                     <div id="screenStats" class="screen-view">
-                        <div class="screen-header">
-                            <button class="btn-back" onclick="navigateTo('Home')">←</button>
-                            <h2 class="screen-title">Báo cáo & Thống kê</h2>
+                        <div class="screen-header-pink">
+                            <button class="btn-back-white" onclick="navigateTo('Home')">←</button>
+                            <span>Báo cáo doanh thu</span>
                             <div></div>
                         </div>
 
-                        <div class="stats-card">
-                            <div class="revenue-header">TỔNG THU NHẬP</div>
-                            <div class="revenue-value" id="statsTotalRevenue">0 đ</div>
-                            <div class="stats-row">
-                                <div>
-                                    <small>Tổng đơn thành công</small>
-                                    <strong id="statsTotalCount">0 lượt</strong>
-                                </div>
-                                <div>
-                                    <small>Trung bình / đơn</small>
-                                    <strong id="statsAvgValue">0 đ</strong>
-                                </div>
+                        <div class="momo-balance-card" style="margin-top: 16px;">
+                            <div class="balance-left">
+                                <small>Tổng doanh thu</small>
+                                <div class="balance-value" id="statsTotalRevenue">0 đ</div>
+                            </div>
+                            <div class="balance-right">
+                                <small>Tổng đơn</small>
+                                <strong id="statsTotalCount">0 đơn</strong>
                             </div>
                         </div>
 
-                        <h3 class="subheading">Theo ngân hàng</h3>
-                        <div id="statsBankList" class="stats-bank-list"></div>
+                        <div class="momo-section-card">
+                            <div class="section-head"><h3>Phân bổ theo ngân hàng / ví</h3></div>
+                            <div id="statsBankList" class="tx-list"></div>
+                        </div>
                     </div>
 
-                    <!-- MÀN HÌNH 8: CÀI ĐẶT -->
+                    <!-- SCREEN 8: SETTINGS -->
                     <div id="screenSettings" class="screen-view">
-                        <div class="screen-header">
-                            <button class="btn-back" onclick="navigateTo('Home')">←</button>
-                            <h2 class="screen-title">Cài đặt hệ thống</h2>
+                        <div class="screen-header-pink">
+                            <button class="btn-back-white" onclick="navigateTo('Home')">←</button>
+                            <span>Cài đặt hệ thống</span>
                             <div></div>
                         </div>
 
-                        <div class="settings-list">
-                            <div class="setting-item">
+                        <div class="momo-section-card" style="margin-top: 16px;">
+                            <div class="tx-row-momo">
                                 <div>
                                     <strong>Quyền đọc thông báo</strong>
-                                    <small>Đang hoạt động trên hệ thống</small>
+                                    <small style="display: block; color: var(--text-muted);">Tự động bắt giao dịch</small>
                                 </div>
-                                <span class="badge-success">ĐANG BẬT</span>
+                                <span style="color: var(--momo-green); font-weight: 800;">ĐANG BẬT</span>
                             </div>
 
-                            <div class="setting-item">
+                            <div class="tx-row-momo">
                                 <div>
-                                    <strong>Âm thanh nhận tiền</strong>
-                                    <small>Chuông Ting + Đọc số tiền tiếng Việt</small>
+                                    <strong>Loa thông báo</strong>
+                                    <small style="display: block; color: var(--text-muted);">Chuông Ting MoMo + Đọc tiếng Việt</small>
                                 </div>
-                                <button class="btn-test-sound" onclick="testSpeaker()">Nghe thử</button>
-                            </div>
-
-                            <div class="setting-item">
-                                <div>
-                                    <strong>Mã PIN bảo vệ thu ngân</strong>
-                                    <small>Khóa tránh nhân viên vào Cài đặt</small>
-                                </div>
-                                <span class="badge-neutral">Đã đặt (1234)</span>
-                            </div>
-
-                            <div class="app-version-box">
-                                <strong>TingPay Việt Nam v1.0.0</strong>
-                                <small>Bản quyền thuộc Tin Học GenZ</small>
+                                <button class="btn-secondary" onclick="testSpeaker()">Thử loa</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Thanh điều hướng dưới đáy màn hình -->
+                <!-- Bottom Nav Bar MoMo Style -->
                 <nav class="phone-bottom-nav">
                     <button class="nav-item active" onclick="navigateTo('Home')" id="navHome">
                         <span class="nav-icon">🏠</span>
@@ -440,7 +432,7 @@
                     </button>
                     <button class="nav-item" onclick="navigateTo('CreatePayment')" id="navPayment">
                         <span class="nav-icon">📱</span>
-                        <span class="nav-label">Tạo QR</span>
+                        <span class="nav-label">Nhận tiền</span>
                     </button>
                     <button class="nav-item" onclick="navigateTo('History')" id="navHistory">
                         <span class="nav-icon">📜</span>

@@ -2,26 +2,28 @@ package com.tinhocgenz.tingpay.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Fintech Sleek Palette: TingPay Emerald & Dark Slate
-val PrimaryEmerald = Color(0xFF00C853)
-val PrimaryDark = Color(0xFF009624)
-val PrimaryLight = Color(0xFF5EFC82)
+// MoMo Fintech Palette: Magenta Pink & Sleek Neutral
+val MoMoPink = Color(0xFFA50064)
+val MoMoPinkLight = Color(0xFFD82D8B)
+val MoMoPinkAccent = Color(0xFFFF4081)
+val MoMoPinkGradientStart = Color(0xFFD82D8B)
+val MoMoPinkGradientEnd = Color(0xFFA50064)
 
-val SecondaryBlue = Color(0xFF2979FF)
-val AccentGold = Color(0xFFFFD600)
-val DangerRed = Color(0xFFFF3D00)
-val WarningOrange = Color(0xFFFF9100)
+val MoMoGreen = Color(0xFF00B14F)
+val MoMoBlue = Color(0xFF1877F2)
+val MoMoGold = Color(0xFFFFB800)
+val MoMoRed = Color(0xFFE51C23)
 
-val DarkBackground = Color(0xFF121418)
-val DarkSurface = Color(0xFF1E222B)
-val DarkSurfaceVariant = Color(0xFF2B303C)
-
-val LightBackground = Color(0xFFF8F9FD)
+val LightBackground = Color(0xFFF5F6F8)
 val LightSurface = Color(0xFFFFFFFF)
-val LightSurfaceVariant = Color(0xFFF0F2F6)
+val LightSurfaceVariant = Color(0xFFF0F2F5)
+
+val DarkBackground = Color(0xFF121212)
+val DarkSurface = Color(0xFF1E1E1E)
+val DarkSurfaceVariant = Color(0xFF2C2C2C)
+
+val TextPrimaryLight = Color(0xFF222222)
+val TextSecondaryLight = Color(0xFF727272)
 
 val TextPrimaryDark = Color(0xFFFFFFFF)
-val TextSecondaryDark = Color(0xFF9EABB9)
-
-val TextPrimaryLight = Color(0xFF1E242B)
-val TextSecondaryLight = Color(0xFF6B7280)
+val TextSecondaryDark = Color(0xFFAAAAAA)

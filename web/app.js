@@ -1,16 +1,16 @@
 // =========================================================
-// TingPay – Bộ Xử Lý & Giả Lập Trải Nghiệm Trực Tuyến
+// TingPay – Giao Diện & Trải Nghiệm Phong Cách MoMo
 // =========================================================
 
-// Quản lý trạng thái ứng dụng
 const state = {
     todayRevenue: 0,
     txCount: 0,
+    showRevenue: true,
     activeBank: {
-        code: "MB",
-        name: "MBBank",
-        bin: "970422",
-        accountNumber: "0123456789",
+        code: "MoMo",
+        name: "Ví MoMo",
+        bin: "999888",
+        accountNumber: "0988776655",
         accountName: "NGUYEN VAN A"
     },
     currentOrder: {
@@ -26,14 +26,55 @@ const state = {
 };
 
 // -------------------------------------------------------------
-// Bộ Quản Lý Giọng Đọc Tiếng Việt Chuẩn Xác (TTS Engine)
+// Âm thanh Ting Ting đặc trưng phong cách MoMo
+// -------------------------------------------------------------
+function playMomoTingSound() {
+    try {
+        if (!state.audioContext) {
+            state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        const ctx = state.audioContext;
+        if (ctx.state === 'suspended') ctx.resume();
+
+        // Nốt Ting thứ 1 (E6 - 1318Hz)
+        const osc1 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(1318, ctx.currentTime);
+        gain1.gain.setValueAtTime(0.6, ctx.currentTime);
+        gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+        osc1.connect(gain1);
+        gain1.connect(ctx.destination);
+        osc1.start(ctx.currentTime);
+        osc1.stop(ctx.currentTime + 0.25);
+
+        // Nốt Ting thứ 2 ngân vang (A6 - 1760Hz) sau 120ms
+        setTimeout(() => {
+            const osc2 = ctx.createOscillator();
+            const gain2 = ctx.createGain();
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(1760, ctx.currentTime);
+            gain2.gain.setValueAtTime(0.7, ctx.currentTime);
+            gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+            osc2.connect(gain2);
+            gain2.connect(ctx.destination);
+            osc2.start(ctx.currentTime);
+            osc2.stop(ctx.currentTime + 0.5);
+        }, 120);
+
+    } catch (e) {
+        console.warn("Lỗi Web Audio", e);
+    }
+}
+
+// -------------------------------------------------------------
+// Bộ Đọc Giọng Nói Tiếng Việt Chuẩn Xác (TTS)
 // -------------------------------------------------------------
 let cachedVietnameseVoice = null;
 
 function initVietnameseVoices() {
     if (!('speechSynthesis' in window)) return;
     const voices = window.speechSynthesis.getVoices();
-    
     cachedVietnameseVoice = voices.find(v => v.lang === 'vi-VN' || v.lang === 'vi_VN') ||
                             voices.find(v => v.lang.toLowerCase().startsWith('vi')) ||
                             voices.find(v => v.name.toLowerCase().includes('vietnam') || v.name.toLowerCase().includes('tiếng việt'));
@@ -44,44 +85,6 @@ if ('speechSynthesis' in window) {
     window.speechSynthesis.onvoiceschanged = initVietnameseVoices;
 }
 
-// Phát tiếng chuông "Ting" thanh thoát (Web Audio API)
-function playTingSound() {
-    try {
-        if (!state.audioContext) {
-            state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        const ctx = state.audioContext;
-        if (ctx.state === 'suspended') ctx.resume();
-
-        const osc1 = ctx.createOscillator();
-        const osc2 = ctx.createOscillator();
-        const gain = ctx.createGain();
-
-        osc1.type = 'sine';
-        osc1.frequency.setValueAtTime(1760, ctx.currentTime);
-        osc1.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.6);
-
-        osc2.type = 'triangle';
-        osc2.frequency.setValueAtTime(2637, ctx.currentTime);
-        osc2.frequency.exponentialRampToValueAtTime(1318, ctx.currentTime + 0.6);
-
-        gain.gain.setValueAtTime(0.75, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
-
-        osc1.connect(gain);
-        osc2.connect(gain);
-        gain.connect(ctx.destination);
-
-        osc1.start();
-        osc2.start();
-        osc1.stop(ctx.currentTime + 0.6);
-        osc2.stop(ctx.currentTime + 0.6);
-    } catch (e) {
-        console.warn("Lỗi Web Audio", e);
-    }
-}
-
-// Đọc to văn bản bằng giọng tiếng Việt tự nhiên
 function speakText(text) {
     if (!('speechSynthesis' in window)) return;
 
@@ -100,7 +103,7 @@ function speakText(text) {
 }
 
 function notifyAudio(amount, bankName) {
-    playTingSound();
+    playMomoTingSound();
 
     if (state.audioMode === "TING_ONLY") return;
 
@@ -111,51 +114,12 @@ function notifyAudio(amount, bankName) {
             speech = `${bankName}, nhận ${words}`;
         }
         speakText(speech);
-    }, 450);
+    }, 550);
 }
 
-// Thuật toán tính mã kiểm tra CRC16 CCITT-FALSE cho VietQR NAPAS
-function crc16(data) {
-    let crc = 0xFFFF;
-    const bytes = new TextEncoder().encode(data);
-    for (let b of bytes) {
-        crc ^= (b << 8);
-        for (let i = 0; i < 8; i++) {
-            if ((crc & 0x8000) !== 0) {
-                crc = ((crc << 1) ^ 0x1021) & 0xFFFF;
-            } else {
-                crc = (crc << 1) & 0xFFFF;
-            }
-        }
-    }
-    return crc.toString(16).toUpperCase().padStart(4, '0');
-}
-
-// Xây dựng chuỗi VietQR chuẩn EMVCo Tag-Length-Value
-function generateVietQrPayload(bin, acc, amount, message) {
-    const tlv = (tag, val) => tag + String(val.length).padStart(2, '0') + val;
-
-    let sub38_01 = tlv("00", bin) + tlv("01", acc);
-    let tag38 = tlv("00", "A000000727") + tlv("01", sub38_01) + tlv("02", "QRIBFTTA");
-
-    let payload = tlv("00", "01") +
-                  tlv("01", amount > 0 ? "12" : "11") +
-                  tlv("38", tag38) +
-                  tlv("53", "704");
-
-    if (amount > 0) payload += tlv("54", String(amount));
-    payload += tlv("58", "VN");
-
-    if (message) {
-        let cleanMsg = message.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9 ]/g, "").trim().substring(0, 25);
-        payload += tlv("62", tlv("08", cleanMsg));
-    }
-
-    payload += "6304";
-    return payload + crc16(payload);
-}
-
-// Chuyển đổi số tiền thành chữ tiếng Việt chuẩn xác (Xử lý đầy đủ: mốt, tư, lăm, lẻ, không trăm)
+// -------------------------------------------------------------
+// Chuyển Đổi Số Tiền Thành Chữ Tiếng Việt
+// -------------------------------------------------------------
 function numberToVietnameseWords(amount) {
     if (amount === 0) return "không đồng";
     if (amount < 0) return "âm " + numberToVietnameseWords(-amount);
@@ -185,30 +149,15 @@ function numberToVietnameseWords(amount) {
         const unit = val % 10;
         let groupText = "";
 
-        // Hàng trăm
-        if (hundred > 0 || readZeroHundred) {
-            groupText += DIGITS[hundred] + " trăm ";
-        }
+        if (hundred > 0 || readZeroHundred) groupText += DIGITS[hundred] + " trăm ";
+        if (ten > 1) groupText += DIGITS[ten] + " mươi ";
+        else if (ten === 1) groupText += "mười ";
+        else if (ten === 0 && unit > 0 && (hundred > 0 || readZeroHundred)) groupText += "lẻ ";
 
-        // Hàng chục
-        if (ten > 1) {
-            groupText += DIGITS[ten] + " mươi ";
-        } else if (ten === 1) {
-            groupText += "mười ";
-        } else if (ten === 0 && unit > 0 && (hundred > 0 || readZeroHundred)) {
-            groupText += "lẻ ";
-        }
-
-        // Hàng đơn vị
-        if (unit === 1 && ten >= 2) {
-            groupText += "mốt";
-        } else if (unit === 4 && ten >= 2) {
-            groupText += "tư";
-        } else if (unit === 5 && ten >= 1) {
-            groupText += "lăm";
-        } else if (unit > 0) {
-            groupText += DIGITS[unit];
-        }
+        if (unit === 1 && ten >= 2) groupText += "mốt";
+        else if (unit === 4 && ten >= 2) groupText += "tư";
+        else if (unit === 5 && ten >= 1) groupText += "lăm";
+        else if (unit > 0) groupText += DIGITS[unit];
 
         const unitIndex = i % 4;
         const unitName = UNITS[unitIndex];
@@ -219,13 +168,9 @@ function numberToVietnameseWords(amount) {
         }
 
         let part = "";
-        if (extraBillions) {
-            part = `${groupText.trim()} ${extraBillions}`;
-        } else if (unitName) {
-            part = `${groupText.trim()} ${unitName}`;
-        } else {
-            part = groupText.trim();
-        }
+        if (extraBillions) part = `${groupText.trim()} ${extraBillions}`;
+        else if (unitName) part = `${groupText.trim()} ${unitName}`;
+        else part = groupText.trim();
 
         words.push(part.trim());
     }
@@ -233,7 +178,50 @@ function numberToVietnameseWords(amount) {
     return words.join(" ").trim() + " đồng";
 }
 
-// Chuyển đổi màn hình
+// -------------------------------------------------------------
+// Sinh Chuỗi VietQR NAPAS 247 Chuẩn EMVCo
+// -------------------------------------------------------------
+function crc16(data) {
+    let crc = 0xFFFF;
+    const bytes = new TextEncoder().encode(data);
+    for (let b of bytes) {
+        crc ^= (b << 8);
+        for (let i = 0; i < 8; i++) {
+            if ((crc & 0x8000) !== 0) {
+                crc = ((crc << 1) ^ 0x1021) & 0xFFFF;
+            } else {
+                crc = (crc << 1) & 0xFFFF;
+            }
+        }
+    }
+    return crc.toString(16).toUpperCase().padStart(4, '0');
+}
+
+function generateVietQrPayload(bin, acc, amount, message) {
+    const tlv = (tag, val) => tag + String(val.length).padStart(2, '0') + val;
+    let sub38_01 = tlv("00", bin) + tlv("01", acc);
+    let tag38 = tlv("00", "A000000727") + tlv("01", sub38_01) + tlv("02", "QRIBFTTA");
+
+    let payload = tlv("00", "01") +
+                  tlv("01", amount > 0 ? "12" : "11") +
+                  tlv("38", tag38) +
+                  tlv("53", "704");
+
+    if (amount > 0) payload += tlv("54", String(amount));
+    payload += tlv("58", "VN");
+
+    if (message) {
+        let cleanMsg = message.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9 ]/g, "").trim().substring(0, 25);
+        payload += tlv("62", tlv("08", cleanMsg));
+    }
+
+    payload += "6304";
+    return payload + crc16(payload);
+}
+
+// -------------------------------------------------------------
+// Điều Hướng & Cập Nhật Giao Diện
+// -------------------------------------------------------------
 function navigateTo(screenId) {
     document.querySelectorAll('.screen-view').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -247,24 +235,31 @@ function navigateTo(screenId) {
     if (screenId === 'Cashier') renderPosQr();
 }
 
-// Định dạng tiền tệ VNĐ
 function formatVnd(val) {
     return new Intl.NumberFormat('vi-VN').format(val) + " đ";
 }
 
-// Giả lập bắn thông báo biến động số dư
+function toggleRevenueEye() {
+    state.showRevenue = !state.showRevenue;
+    const el = document.getElementById('homeTodayRevenue');
+    el.innerText = state.showRevenue ? formatVnd(state.todayRevenue) : "••••••• đ";
+}
+
+// Giả lập bắn thông báo nhận tiền
 function simulatePush(bankCode, amount, desc, isDebit = false) {
     const banner = document.getElementById('phoneNotiBanner');
     const icon = document.getElementById('notiIcon');
     const title = document.getElementById('notiTitle');
     const text = document.getElementById('notiText');
 
-    icon.innerText = bankCode;
-    title.innerText = isDebit ? `Ngân hàng ${bankCode} (Trừ tiền)` : `Ngân hàng ${bankCode} (Cộng tiền)`;
-    text.innerText = isDebit ? `TK: 0123456789 | GD: -${formatVnd(amount)} | ${desc}` : `TK: 0123456789 | GD: +${formatVnd(amount)} | ${desc}`;
+    icon.innerText = bankCode === "MoMo" ? "MoMo" : bankCode;
+    title.innerText = isDebit ? `Thông báo trừ tiền` : `Nhận tiền thành công`;
+    text.innerText = isDebit ? `Tài khoản vừa trừ -${formatVnd(amount)} | ${desc}` : `Bạn vừa nhận được +${formatVnd(amount)} từ khách hàng`;
 
     banner.classList.add('show');
-    setTimeout(() => banner.classList.remove('show'), 3500);
+    setTimeout(() => banner.classList.remove('show'), 3800);
+
+    const nowTime = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 
     if (!isDebit) {
         state.todayRevenue += amount;
@@ -275,7 +270,7 @@ function simulatePush(bankCode, amount, desc, isDebit = false) {
             bankCode: bankCode,
             amount: amount,
             desc: desc,
-            time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+            time: nowTime,
             type: 'CREDIT'
         };
         state.transactions.unshift(tx);
@@ -287,7 +282,7 @@ function simulatePush(bankCode, amount, desc, isDebit = false) {
         const cashierActive = document.getElementById('screenCashier').classList.contains('active');
 
         if (qrScreenActive || cashierActive) {
-            showPaymentSuccess(amount, bankCode, state.currentOrder.orderCode);
+            showPaymentSuccess(amount, bankCode, state.currentOrder.orderCode, nowTime);
         }
     } else {
         const tx = {
@@ -295,7 +290,7 @@ function simulatePush(bankCode, amount, desc, isDebit = false) {
             bankCode: bankCode,
             amount: amount,
             desc: desc,
-            time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+            time: nowTime,
             type: 'DEBIT'
         };
         state.transactions.unshift(tx);
@@ -311,33 +306,57 @@ function simulateCustomPush() {
 }
 
 function updateDashboard() {
-    document.getElementById('homeTodayRevenue').innerText = formatVnd(state.todayRevenue);
+    const revEl = document.getElementById('homeTodayRevenue');
+    revEl.innerText = state.showRevenue ? formatVnd(state.todayRevenue) : "••••••• đ";
     document.getElementById('homeTxCount').innerText = `${state.txCount} đơn`;
-    document.getElementById('homeAvgValue').innerText = state.txCount > 0 ? formatVnd(Math.round(state.todayRevenue / state.txCount)) : "0 đ";
 
+    // Cập nhật danh sách giao dịch MoMo
     const recentList = document.getElementById('homeRecentList');
     if (state.transactions.length === 0) {
         recentList.innerHTML = `<div class="empty-state">Chưa có giao dịch nào hôm nay</div>`;
     } else {
         recentList.innerHTML = state.transactions.slice(0, 4).map(tx => `
-            <div class="tx-row ${tx.type === 'CREDIT' ? 'tx-credit' : 'tx-debit'}">
-                <div class="tx-left">
-                    <div class="tx-badge">${tx.bankCode}</div>
+            <div class="tx-row-momo">
+                <div class="tx-momo-left">
+                    <div class="tx-momo-badge">${tx.bankCode.slice(0, 4)}</div>
                     <div>
-                        <div class="tx-desc">${tx.desc}</div>
-                        <div class="tx-time">${tx.time}</div>
+                        <div class="tx-momo-desc">${tx.desc}</div>
+                        <div class="tx-momo-time">${tx.time}</div>
                     </div>
                 </div>
-                <div class="tx-amount">${tx.type === 'CREDIT' ? '+' : '-'}${formatVnd(tx.amount)}</div>
+                <div class="tx-momo-amount ${tx.type === 'CREDIT' ? 'amount-plus' : 'amount-minus'}">
+                    ${tx.type === 'CREDIT' ? '+' : '-'}${formatVnd(tx.amount)}
+                </div>
             </div>
         `).join('');
     }
 
-    filterHistory('ALL');
+    // Cập nhật Lịch sử đầy đủ
+    const fullList = document.getElementById('historyFullList');
+    if (fullList) {
+        if (state.transactions.length === 0) {
+            fullList.innerHTML = `<div class="empty-state">Chưa có giao dịch nào</div>`;
+        } else {
+            fullList.innerHTML = state.transactions.map(tx => `
+                <div class="tx-row-momo">
+                    <div class="tx-momo-left">
+                        <div class="tx-momo-badge">${tx.bankCode.slice(0, 4)}</div>
+                        <div>
+                            <div class="tx-momo-desc">${tx.desc}</div>
+                            <div class="tx-momo-time">${tx.time}</div>
+                        </div>
+                    </div>
+                    <div class="tx-momo-amount ${tx.type === 'CREDIT' ? 'amount-plus' : 'amount-minus'}">
+                        ${tx.type === 'CREDIT' ? '+' : '-'}${formatVnd(tx.amount)}
+                    </div>
+                </div>
+            `).join('');
+        }
+    }
 
+    // Cập nhật Thống kê
     document.getElementById('statsTotalRevenue').innerText = formatVnd(state.todayRevenue);
-    document.getElementById('statsTotalCount').innerText = `${state.txCount} lượt`;
-    document.getElementById('statsAvgValue').innerText = state.txCount > 0 ? formatVnd(Math.round(state.todayRevenue / state.txCount)) : "0 đ";
+    document.getElementById('statsTotalCount').innerText = `${state.txCount} đơn`;
 
     const bankMap = {};
     state.transactions.filter(t => t.type === 'CREDIT').forEach(t => {
@@ -349,33 +368,12 @@ function updateDashboard() {
         statsBankList.innerHTML = `<div class="empty-state">Chưa có dữ liệu ngân hàng</div>`;
     } else {
         statsBankList.innerHTML = Object.entries(bankMap).map(([bank, total]) => `
-            <div class="tx-row">
-                <div class="tx-left">
-                    <div class="tx-badge">${bank}</div>
-                    <div><strong>Ngân hàng ${bank}</strong></div>
+            <div class="tx-row-momo">
+                <div class="tx-momo-left">
+                    <div class="tx-momo-badge">${bank.slice(0, 4)}</div>
+                    <div><strong>${bank}</strong></div>
                 </div>
-                <div class="tx-amount text-success">${formatVnd(total)}</div>
-            </div>
-        `).join('');
-    }
-}
-
-function filterHistory(type) {
-    const list = document.getElementById('historyFullList');
-    const filtered = type === 'ALL' ? state.transactions : state.transactions.filter(t => t.type === type);
-    if (filtered.length === 0) {
-        list.innerHTML = `<div class="empty-state">Không có giao dịch nào</div>`;
-    } else {
-        list.innerHTML = filtered.map(tx => `
-            <div class="tx-row ${tx.type === 'CREDIT' ? 'tx-credit' : 'tx-debit'}">
-                <div class="tx-left">
-                    <div class="tx-badge">${tx.bankCode}</div>
-                    <div>
-                        <div class="tx-desc">${tx.desc}</div>
-                        <div class="tx-time">${tx.time}</div>
-                    </div>
-                </div>
-                <div class="tx-amount">${tx.type === 'CREDIT' ? '+' : '-'}${formatVnd(tx.amount)}</div>
+                <div class="tx-momo-amount amount-plus">${formatVnd(total)}</div>
             </div>
         `).join('');
     }
@@ -402,9 +400,7 @@ function posClear() {
     renderPosQr();
 }
 
-function posSubmit() {
-    // Tự động sinh QR khi gõ
-}
+function posSubmit() {}
 
 function renderPosQr() {
     const amount = parseInt(state.posInput) || 0;
@@ -448,7 +444,7 @@ function createPayClear() {
 
 function generateAndShowQr() {
     const amount = parseInt(state.createPayInput) || 0;
-    if (amount <= 0) return alert("Vui lòng nhập số tiền hợp lệ!");
+    if (amount <= 0) return alert("Vui lòng nhập số tiền!");
 
     state.currentOrder.amount = amount;
     state.currentOrder.desc = document.getElementById('createPayNote').value;
@@ -457,7 +453,7 @@ function generateAndShowQr() {
     document.getElementById('qrScreenAmount').innerText = formatVnd(amount);
     document.getElementById('qrScreenAcc').innerText = `${state.activeBank.name} • ${state.activeBank.accountNumber}`;
     document.getElementById('qrScreenName').innerText = state.activeBank.accountName;
-    document.getElementById('qrScreenDesc').innerText = `Nội dung: ${state.currentOrder.orderCode}`;
+    document.getElementById('qrScreenDesc').innerText = `MÃ ĐƠN: ${state.currentOrder.orderCode}`;
 
     const container = document.getElementById('mainQrCanvas');
     container.innerHTML = "";
@@ -471,8 +467,8 @@ function generateAndShowQr() {
 
     new QRCode(container, {
         text: payload,
-        width: 200,
-        height: 200,
+        width: 190,
+        height: 190,
         colorDark: "#000000",
         colorLight: "#ffffff",
         correctLevel: QRCode.CorrectLevel.M
@@ -481,22 +477,23 @@ function generateAndShowQr() {
     navigateTo('QrView');
 }
 
-function showPaymentSuccess(amount, bank, code) {
+function showPaymentSuccess(amount, bank, code, timeStr) {
     document.getElementById('successAmount').innerText = formatVnd(amount);
-    document.getElementById('successBank').innerText = bank;
+    document.getElementById('successBank').innerText = bank === "MoMo" ? "Ví MoMo" : `Ngân hàng ${bank}`;
     document.getElementById('successCode').innerText = code || "POS";
+    document.getElementById('successTime').innerText = timeStr || "Vừa xong";
     navigateTo('Success');
 }
 
 function testSpeaker() {
-    notifyAudio(350000, "MBBank");
+    notifyAudio(350000, "Ví MoMo");
 }
 
 function changeAudioMode() {
     state.audioMode = document.getElementById('webAudioMode').value;
 }
 
-// Khởi tạo đồng hồ & dữ liệu ban đầu
+// Khởi tạo
 setInterval(() => {
     const now = new Date();
     const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });

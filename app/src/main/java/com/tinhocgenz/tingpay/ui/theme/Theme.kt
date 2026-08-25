@@ -7,34 +7,39 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-private val DarkColorScheme = darkColorScheme(
-    primary = PrimaryEmerald,
-    onPrimary = Color.Black,
-    secondary = SecondaryBlue,
-    onSecondary = Color.White,
-    background = DarkBackground,
-    surface = DarkSurface,
-    surfaceVariant = DarkSurfaceVariant,
-    onBackground = TextPrimaryDark,
-    onSurface = TextPrimaryDark,
-    error = DangerRed
-)
-
 private val LightColorScheme = lightColorScheme(
-    primary = PrimaryEmerald,
+    primary = MoMoPink,
     onPrimary = Color.White,
-    secondary = SecondaryBlue,
+    primaryContainer = MoMoPinkLight,
+    onPrimaryContainer = Color.White,
+    secondary = MoMoBlue,
     onSecondary = Color.White,
     background = LightBackground,
     surface = LightSurface,
     surfaceVariant = LightSurfaceVariant,
     onBackground = TextPrimaryLight,
     onSurface = TextPrimaryLight,
-    error = DangerRed
+    error = MoMoRed
+)
+
+private val DarkColorScheme = darkColorScheme(
+    primary = MoMoPinkLight,
+    onPrimary = Color.White,
+    primaryContainer = MoMoPink,
+    onPrimaryContainer = Color.White,
+    secondary = MoMoBlue,
+    onSecondary = Color.White,
+    background = DarkBackground,
+    surface = DarkSurface,
+    surfaceVariant = DarkSurfaceVariant,
+    onBackground = TextPrimaryDark,
+    onSurface = TextPrimaryDark,
+    error = MoMoRed
 )
 
 @Composable
@@ -47,8 +52,8 @@ fun TingPayTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.background.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+            window.statusBarColor = colorScheme.primary.toArgb()
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
         }
     }
 
