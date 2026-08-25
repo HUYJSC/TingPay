@@ -95,6 +95,56 @@ body {
     margin-top: 4px;
 }
 
+/* Language & Voice Converter Switcher */
+.lang-switch-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.btn-lang-tab {
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #94a3b8;
+    padding: 10px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-lang-tab.active {
+    background: var(--momo-pink);
+    border-color: var(--momo-pink-light);
+    color: #fff;
+    box-shadow: 0 4px 12px var(--momo-pink-glow);
+}
+
+.speech-preview-box {
+    background: rgba(216, 45, 139, 0.1);
+    border: 1px dashed var(--momo-pink-light);
+    border-radius: 12px;
+    padding: 12px;
+    margin: 4px 0;
+}
+
+.speech-preview-box small {
+    display: block;
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--momo-pink-light);
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+}
+
+.speech-preview-box strong {
+    display: block;
+    font-size: 13px;
+    color: #f8fafc;
+    line-height: 1.4;
+}
+
 /* Simulator Actions */
 .control-box {
     display: flex;
@@ -151,7 +201,6 @@ body {
 .sim-vcb .sim-btn-icon { background: #14532d; color: #86efac; }
 .sim-tcb .sim-btn-icon { background: #7f1d1d; color: #fca5a5; }
 .sim-momo .sim-btn-icon { background: var(--momo-pink); color: #fff; }
-.sim-debit .sim-btn-icon { background: #475569; color: #cbd5e1; }
 
 .sim-btn-text strong { display: block; font-size: 13px; font-weight: 700; }
 .sim-btn-text small { font-size: 11px; color: #94a3b8; }
@@ -206,7 +255,7 @@ select:focus, input:focus { border-color: var(--momo-pink-light); }
     color: var(--momo-pink-light);
     border: 1px solid rgba(216, 45, 139, 0.3);
     border-radius: 12px;
-    padding: 10px;
+    padding: 11px;
     font-size: 13px;
     font-weight: 700;
     cursor: pointer;
