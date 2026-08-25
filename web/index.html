@@ -2,8 +2,16 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>TingPay – Loa Thông Báo Nhận Tiền Thông Minh MoMo</title>
+
+    <!-- iOS Safari & PWA Configuration -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="TingPay">
+    <meta name="theme-color" content="#A50064">
+    <link rel="manifest" href="manifest.json">
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,10 +27,19 @@
             <div class="brand-header">
                 <div class="brand-badge">
                     <div class="pulse-dot"></div>
-                    <span id="badgeText">BỘ CHUYỂN ĐỔI GIỌNG ĐỌC TIẾNG VIỆT</span>
+                    <span id="badgeText">HỖ TRỢ ANDROID & IPHONE (iOS)</span>
                 </div>
-                <h1 class="brand-title">TingPay <span>Voice Studio</span></h1>
-                <p class="brand-desc" id="brandDescText">Hệ thống chuyển đổi số tiền thành giọng đọc tiếng Việt tự nhiên, tích hợp bộ phát âm thanh đa vùng miền và dự phòng thông minh.</p>
+                <h1 class="brand-title">TingPay <span>Multi-Platform</span></h1>
+                <p class="brand-desc" id="brandDescText">Hệ thống chuyển đổi số tiền thành giọng đọc tiếng Việt tự nhiên chuẩn MoMo, tương thích cả Android, iPhone (iOS Safari PWA) và máy tính.</p>
+            </div>
+
+            <!-- Hướng dẫn thêm vào iPhone -->
+            <div class="ios-install-box">
+                <div class="ios-box-header">
+                    <span>🍏</span>
+                    <strong>Dùng trên iPhone (iOS):</strong>
+                </div>
+                <p>Mở trên <strong>Safari</strong> $\rightarrow$ Bấm nút <strong>Chia sẻ (Share) 📤</strong> $\rightarrow$ Chọn <strong>"Thêm vào Màn hình chính" (Add to Home Screen)</strong>.</p>
             </div>
 
             <!-- Khung chuyển đổi ngôn ngữ & Giọng đọc -->
