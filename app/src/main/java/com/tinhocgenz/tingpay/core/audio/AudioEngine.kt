@@ -1,8 +1,6 @@
 package com.tinhocgenz.tingpay.core.audio
 
 import android.content.Context
-import android.media.AudioManager
-import android.media.ToneGenerator
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -11,101 +9,109 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-
-enum class AudioNotificationMode {
-    TING_ONLY,
-    TING_AND_AMOUNT,
-    BANK_AND_AMOUNT,
-    FULL_SENTENCE
-}
-
-data class AudioRequest(
-    val amount: Long,
-    val bankName: String = "",
-    val customText: String? = null,
-    val mode: AudioNotificationMode = AudioNotificationMode.TING_AND_AMOUNT
-)
+import kotlinx.coroutines.withTimeoutOrNull
 
 class AudioEngine(private val context: Context) {
 
-    private val ttsManager = TtsManager(context)
+    private val tingPlayer = TingPlayer(context)
+    val ttsManager = TtsManager(context)
+
     private val scope = CoroutineScope(Dispatchers.Default)
-    private val audioQueue = Channel<AudioRequest>(capacity = Channel.UNLIMITED)
+    private val audioQueue = Channel<AudioPlaybackRequest>(capacity = Channel.UNLIMITED)
     private val playbackMutex = Mutex()
 
     init {
-        startQueueConsumer()
+        startQueueProcessor()
     }
 
-    private fun startQueueConsumer() {
+    private fun startQueueProcessor() {
         scope.launch {
             for (request in audioQueue) {
                 playbackMutex.withLock {
-                    processAudioRequest(request)
+                    processPlayback(request)
                 }
             }
         }
     }
 
-    private suspend fun processAudioRequest(request: AudioRequest) {
-        // 1. Play Ding / Ting Sound
-        playTingSound()
-        delay(400) // Brief pause after Ding sound
+    private suspend fun processPlayback(request: AudioPlaybackRequest) {
+        // 1. Phát chuông Ting trước
+        tingPlayer.playTing()
+        delay(380) // Khoảng nghỉ tự nhiên sau tiếng chuông
 
-        // 2. Play Speech according to mode
-        val speechText = when (request.mode) {
+        // Nếu chế độ là TING_ONLY hoặc thiết bị chưa có tiếng Việt -> Dừng sau tiếng Ting
+        if (request.config.mode == AudioNotificationMode.TING_ONLY || !ttsManager.isVietnameseSupported) {
+            delay(200)
+            return
+        }
+
+        // 2. Chuyển đổi số tiền sang chữ tiếng Việt tự nhiên
+        val amountWords = VietnameseMoneyFormatter.formatToWords(request.amount)
+
+        // 3. Xây dựng câu đọc tiếng Việt ngắn gọn, dễ nghe
+        val textToSpeak = when (request.config.mode) {
             AudioNotificationMode.TING_ONLY -> null
             AudioNotificationMode.TING_AND_AMOUNT -> {
-                val words = VietnameseNumberToWords.convert(request.amount)
-                "Đã nhận $words"
+                "Đã nhận $amountWords"
             }
             AudioNotificationMode.BANK_AND_AMOUNT -> {
-                val words = VietnameseNumberToWords.convert(request.amount)
-                val bankPart = if (request.bankName.isNotBlank()) "${request.bankName}, " else ""
-                "${bankPart}nhận $words"
+                val bankPrefix = if (request.bankName.isNotBlank()) "${request.bankName}, " else ""
+                "${bankPrefix}nhận $amountWords"
             }
             AudioNotificationMode.FULL_SENTENCE -> {
-                request.customText ?: "Đã thanh toán thành công ${VietnameseNumberToWords.convert(request.amount)}"
+                request.customSentence ?: "Đã thanh toán thành công số tiền $amountWords"
             }
         }
 
-        if (speechText != null) {
-            val completionChannel = Channel<Unit>(capacity = 1)
-            ttsManager.speak(speechText, System.currentTimeMillis().toString()) {
-                scope.launch { completionChannel.send(Unit) }
-            }
-            // Wait until speech is finished or max 8 seconds timeout
-            kotlinx.coroutines.withTimeoutOrNull(8000) {
-                completionChannel.receive()
-            }
-            delay(200)
-        }
-    }
+        if (textToSpeak != null) {
+            val completionSignal = Channel<Unit>(capacity = 1)
+            val utteranceId = "TingPay_${System.currentTimeMillis()}"
 
-    private fun playTingSound() {
-        try {
-            val toneGen = ToneGenerator(AudioManager.STREAM_MUSIC, 100)
-            toneGen.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 250)
-            scope.launch {
-                delay(300)
-                toneGen.release()
+            ttsManager.setSpeechRate(request.config.speechRate)
+            ttsManager.setPitch(request.config.pitch)
+
+            ttsManager.speak(textToSpeak, utteranceId) {
+                scope.launch { completionSignal.send(Unit) }
             }
-        } catch (e: Exception) {
-            Log.e("AudioEngine", "Error playing ting sound", e)
+
+            // Chờ đọc xong hoặc tối đa 8 giây (timeout an toàn)
+            withTimeoutOrNull(8000) {
+                completionSignal.receive()
+            }
+
+            // Khoảng nghỉ giữa 2 giao dịch liên tiếp (300-500ms)
+            delay(350)
         }
     }
 
-    fun notifyPaymentReceived(
+    /**
+     * Gửi yêu cầu phát âm thanh nhận tiền vào hàng đợi (Thread-safe & Non-blocking)
+     */
+    fun enqueuePaymentAudio(
         amount: Long,
         bankName: String = "",
-        mode: AudioNotificationMode = AudioNotificationMode.TING_AND_AMOUNT
+        config: AudioConfig = AudioConfig()
     ) {
         scope.launch {
-            audioQueue.send(AudioRequest(amount = amount, bankName = bankName, mode = mode))
+            audioQueue.send(
+                AudioPlaybackRequest(
+                    amount = amount,
+                    bankName = bankName,
+                    config = config
+                )
+            )
         }
+    }
+
+    /**
+     * Thử âm thanh mẫu trong Settings
+     */
+    fun testVoice(sampleAmount: Long = 350000, bankName: String = "MBBank", config: AudioConfig = AudioConfig()) {
+        enqueuePaymentAudio(sampleAmount, bankName, config)
     }
 
     fun shutdown() {
+        tingPlayer.release()
         ttsManager.shutdown()
     }
 }

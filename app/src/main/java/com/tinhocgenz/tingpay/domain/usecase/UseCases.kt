@@ -1,5 +1,6 @@
 package com.tinhocgenz.tingpay.domain.usecase
 
+import com.tinhocgenz.tingpay.core.audio.AudioConfig
 import com.tinhocgenz.tingpay.core.audio.AudioEngine
 import com.tinhocgenz.tingpay.core.audio.AudioNotificationMode
 import com.tinhocgenz.tingpay.domain.model.Order
@@ -46,7 +47,7 @@ class CreateOrderUseCase(
     }
 
     private fun generateOrderCode(): String {
-        val randomNum = Random().nextInt(9000) + 1000 // 4 digits 1000-9999
+        val randomNum = Random().nextInt(9000) + 1000 // 4 chữ số 1000-9999
         return "TP$randomNum"
     }
 }
@@ -71,23 +72,23 @@ class ProcessNotificationUseCase(
     val events: SharedFlow<PaymentEvent> = _events.asSharedFlow()
 
     suspend operator fun invoke(notification: BankNotification) {
-        // 1. Parse Notification
+        // 1. Phân tích cú pháp thông báo ngân hàng
         val parsed = parserRegistry.parse(notification)
         if (parsed == null) {
-            _events.tryEmit(PaymentEvent.NotificationIgnored("Không thể nhận diện cú pháp ngân hàng"))
+            _events.tryEmit(PaymentEvent.NotificationIgnored("Không nhận diện được định dạng ngân hàng"))
             return
         }
 
-        // 2. Check for Duplicates (SHA-256 Fingerprint)
+        // 2. Chống giao dịch trùng lặp (SHA-256 Fingerprint)
         if (duplicateDetector.isDuplicate(parsed)) {
-            _events.tryEmit(PaymentEvent.NotificationIgnored("Bỏ qua thông báo giao dịch trùng"))
+            _events.tryEmit(PaymentEvent.NotificationIgnored("Bỏ qua thông báo giao dịch bị trùng lặp"))
             return
         }
 
-        // 3. Normalize into Transaction Model
+        // 3. Chuẩn hóa sang Transaction Model
         val transaction = normalizer.normalize(parsed, notification.postTime)
 
-        // 4. If transaction is CREDIT (Money in), execute Matching & Audio
+        // 4. Chỉ phát âm thanh và khớp lệnh đối với giao dịch TIỀN VÀO (CREDIT)
         if (transaction.type == TransactionType.CREDIT) {
             val matchResult = matchingEngine.match(transaction)
 
@@ -110,15 +111,14 @@ class ProcessNotificationUseCase(
                 }
             }
 
-            // Save transaction to DB
+            // Lưu giao dịch vào SQLite DB
             try {
                 transactionRepository.insertTransaction(finalTransaction)
             } catch (e: Exception) {
-                // If race condition hit unique hash, ignore
-                return
+                return // Nếu bị lỗi trùng hash trong race condition -> dừng
             }
 
-            // Trigger Ting Sound & Vietnamese Text-To-Speech
+            // 5. Kích hoạt Loa Ting + Đọc tiếng Việt qua Audio Engine
             val audioModeStr = settingRepository.getSetting("audio_mode", AudioNotificationMode.TING_AND_AMOUNT.name)
             val audioMode = try {
                 AudioNotificationMode.valueOf(audioModeStr)
@@ -126,17 +126,25 @@ class ProcessNotificationUseCase(
                 AudioNotificationMode.TING_AND_AMOUNT
             }
 
-            audioEngine.notifyPaymentReceived(
+            val speedRateStr = settingRepository.getSetting("speech_rate", "0.95")
+            val speechRate = speedRateStr.toFloatOrNull() ?: 0.95f
+
+            val audioConfig = AudioConfig(
+                mode = audioMode,
+                speechRate = speechRate
+            )
+
+            audioEngine.enqueuePaymentAudio(
                 amount = finalTransaction.amount,
                 bankName = finalTransaction.bankCode,
-                mode = audioMode
+                config = audioConfig
             )
         } else {
-            // Save DEBIT transaction for history without audio
+            // Giao dịch DEBIT (trừ tiền) chỉ lưu lịch sử, TUYỆT ĐỐI KHÔNG PHÁT LOA
             try {
                 transactionRepository.insertTransaction(transaction)
             } catch (e: Exception) {
-                // Ignore duplicate
+                // Bỏ qua
             }
         }
     }

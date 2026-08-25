@@ -34,19 +34,9 @@ function initVietnameseVoices() {
     if (!('speechSynthesis' in window)) return;
     const voices = window.speechSynthesis.getVoices();
     
-    // Tìm giọng tiếng Việt ưu tiên: Google Tiếng Việt, Microsoft Hoài My, Nam Minh, hoặc bất kỳ giọng vi-VN nào
     cachedVietnameseVoice = voices.find(v => v.lang === 'vi-VN' || v.lang === 'vi_VN') ||
                             voices.find(v => v.lang.toLowerCase().startsWith('vi')) ||
                             voices.find(v => v.name.toLowerCase().includes('vietnam') || v.name.toLowerCase().includes('tiếng việt'));
-
-    const voiceStatus = document.getElementById('voiceStatusInfo');
-    if (voiceStatus) {
-        if (cachedVietnameseVoice) {
-            voiceStatus.innerText = `Giọng đọc: ${cachedVietnameseVoice.name} (${cachedVietnameseVoice.lang})`;
-        } else {
-            voiceStatus.innerText = `Đang sử dụng bộ đọc tiếng Việt hệ thống (vi-VN)`;
-        }
-    }
 }
 
 if ('speechSynthesis' in window) {
@@ -93,23 +83,16 @@ function playTingSound() {
 
 // Đọc to văn bản bằng giọng tiếng Việt tự nhiên
 function speakText(text) {
-    if (!('speechSynthesis' in window)) {
-        alert("Trình duyệt không hỗ trợ Web SpeechSynthesis");
-        return;
-    }
+    if (!('speechSynthesis' in window)) return;
 
     window.speechSynthesis.cancel();
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = 'vi-VN';
 
-    if (!cachedVietnameseVoice) {
-        initVietnameseVoices();
-    }
-    if (cachedVietnameseVoice) {
-        utter.voice = cachedVietnameseVoice;
-    }
+    if (!cachedVietnameseVoice) initVietnameseVoices();
+    if (cachedVietnameseVoice) utter.voice = cachedVietnameseVoice;
 
-    utter.rate = 0.95; // Tốc độ nói chuẩn, dễ nghe
+    utter.rate = 0.95;
     utter.pitch = 1.0;
     utter.volume = 1.0;
 
@@ -172,49 +155,82 @@ function generateVietQrPayload(bin, acc, amount, message) {
     return payload + crc16(payload);
 }
 
-// Chuyển đổi số tiền thành chữ tiếng Việt chuẩn xác
-function numberToVietnameseWords(n) {
-    if (n === 0) return "không đồng";
-    const digits = ["không", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín"];
-    const units = ["", "nghìn", "triệu", "tỷ"];
+// Chuyển đổi số tiền thành chữ tiếng Việt chuẩn xác (Xử lý đầy đủ: mốt, tư, lăm, lẻ, không trăm)
+function numberToVietnameseWords(amount) {
+    if (amount === 0) return "không đồng";
+    if (amount < 0) return "âm " + numberToVietnameseWords(-amount);
 
-    let num = n;
+    const DIGITS = ["không", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín"];
+    const UNITS = ["", "nghìn", "triệu", "tỷ"];
+
+    let num = amount;
     let groups = [];
     while (num > 0) {
         groups.push(num % 1000);
         num = Math.floor(num / 1000);
     }
 
+    const groupCount = groups.length;
     let words = [];
-    for (let i = groups.length - 1; i >= 0; i--) {
-        let val = groups[i];
+
+    for (let i = groupCount - 1; i >= 0; i--) {
+        const val = groups[i];
         if (val === 0) continue;
 
-        let hundred = Math.floor(val / 100);
-        let ten = Math.floor((val % 100) / 10);
-        let unit = val % 10;
-        let part = "";
+        const isHighestGroup = (i === groupCount - 1);
+        const readZeroHundred = !isHighestGroup;
 
-        if (hundred > 0 || i < groups.length - 1) part += digits[hundred] + " trăm ";
-        if (ten > 1) {
-            part += digits[ten] + " mươi ";
-            if (unit === 1) part += "mốt";
-            else if (unit === 5) part += "lăm";
-            else if (unit > 0) part += digits[unit];
-        } else if (ten === 1) {
-            part += "mười ";
-            if (unit === 5) part += "lăm";
-            else if (unit > 0) part += digits[unit];
-        } else if (ten === 0 && unit > 0) {
-            if (hundred > 0 || i < groups.length - 1) part += "linh ";
-            part += digits[unit];
+        const hundred = Math.floor(val / 100);
+        const ten = Math.floor((val % 100) / 10);
+        const unit = val % 10;
+        let groupText = "";
+
+        // Hàng trăm
+        if (hundred > 0 || readZeroHundred) {
+            groupText += DIGITS[hundred] + " trăm ";
         }
 
-        let unitText = units[i % units.length];
-        words.push((part.trim() + " " + unitText).trim());
+        // Hàng chục
+        if (ten > 1) {
+            groupText += DIGITS[ten] + " mươi ";
+        } else if (ten === 1) {
+            groupText += "mười ";
+        } else if (ten === 0 && unit > 0 && (hundred > 0 || readZeroHundred)) {
+            groupText += "lẻ ";
+        }
+
+        // Hàng đơn vị
+        if (unit === 1 && ten >= 2) {
+            groupText += "mốt";
+        } else if (unit === 4 && ten >= 2) {
+            groupText += "tư";
+        } else if (unit === 5 && ten >= 1) {
+            groupText += "lăm";
+        } else if (unit > 0) {
+            groupText += DIGITS[unit];
+        }
+
+        const unitIndex = i % 4;
+        const unitName = UNITS[unitIndex];
+        const billionsMultiplier = Math.floor(i / 4);
+        let extraBillions = "";
+        if (billionsMultiplier > 0 && unitIndex === 0) {
+            extraBillions = "tỷ ".repeat(billionsMultiplier).trim();
+        }
+
+        let part = "";
+        if (extraBillions) {
+            part = `${groupText.trim()} ${extraBillions}`;
+        } else if (unitName) {
+            part = `${groupText.trim()} ${unitName}`;
+        } else {
+            part = groupText.trim();
+        }
+
+        words.push(part.trim());
     }
 
-    return words.join(" ") + " đồng";
+    return words.join(" ").trim() + " đồng";
 }
 
 // Chuyển đổi màn hình
@@ -323,7 +339,6 @@ function updateDashboard() {
     document.getElementById('statsTotalCount').innerText = `${state.txCount} lượt`;
     document.getElementById('statsAvgValue').innerText = state.txCount > 0 ? formatVnd(Math.round(state.todayRevenue / state.txCount)) : "0 đ";
 
-    // Phân bổ ngân hàng
     const bankMap = {};
     state.transactions.filter(t => t.type === 'CREDIT').forEach(t => {
         bankMap[t.bankCode] = (bankMap[t.bankCode] || 0) + t.amount;
