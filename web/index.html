@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TingPay – Loa Thông Báo Nhận Tiền Phong Cách MoMo</title>
+    <title>TingPay – Loa Nhận Tiền Thông Minh Phong Cách MoMo</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,15 +14,15 @@
 </head>
 <body>
     <div class="studio-layout">
-        <!-- CỘT TRÁI: Bảng điều khiển giả lập bắn thông báo -->
+        <!-- CỘT TRÁI: Bảng điều khiển giả lập & Tùy chỉnh giọng đọc -->
         <aside class="simulator-sidebar">
             <div class="brand-header">
                 <div class="brand-badge">
                     <div class="pulse-dot"></div>
-                    <span>PHONG CÁCH VÍ MOMO</span>
+                    <span>TÙY CHỌN GIỌNG ĐỌC TIẾNG VIỆT</span>
                 </div>
-                <h1 class="brand-title">TingPay <span>MoMo Style</span></h1>
-                <p class="brand-desc">Trải nghiệm giao diện nhận tiền chuyển khoản, sinh mã VietQR và phát loa đọc tiền tiếng Việt chuẩn phong cách MoMo.</p>
+                <h1 class="brand-title">TingPay <span>Voice Studio</span></h1>
+                <p class="brand-desc">Tùy chọn đa dạng giọng đọc tiếng Việt (Nữ Bắc, Nam Bắc, Nữ Nam, Nam Nam), tốc độ đọc và mẫu câu thông báo.</p>
             </div>
 
             <!-- Khung giả lập giao dịch -->
@@ -64,17 +64,49 @@
                             <small>Hóa đơn bàn tiệc</small>
                         </div>
                     </button>
+                </div>
 
-                    <button class="btn-sim sim-debit" onclick="simulatePush('MB', 100000, 'GD: -100,000VND Rut tien ATM', true)">
-                        <div class="sim-btn-icon">-</div>
-                        <div class="sim-btn-text">
-                            <strong>Giao dịch trừ tiền (-100k)</strong>
-                            <small>Bỏ qua, không đọc loa</small>
-                        </div>
+                <!-- Bộ Tùy Chỉnh Giọng Đọc Tiếng Việt -->
+                <div class="audio-settings-card">
+                    <h4>🎙️ Chọn Ngôn Ngữ & Giọng Đọc</h4>
+                    
+                    <div class="form-group">
+                        <label>Giọng đọc tiếng Việt:</label>
+                        <select id="voiceTypeSelect" onchange="changeVoiceType()">
+                            <option value="FEMALE_NORTH">👩 Giọng Nữ Miền Bắc (Ngọt ngào, truyền cảm)</option>
+                            <option value="MALE_NORTH">👨 Giọng Nam Miền Bắc (Trầm ấm, dứt khoát)</option>
+                            <option value="FEMALE_SOUTH">👩 Giọng Nữ Miền Nam (Dễ thương, nhẹ nhàng)</option>
+                            <option value="MALE_SOUTH">👨 Giọng Nam Miền Nam (Hào sảng, tự nhiên)</option>
+                            <option value="AUTO_SYSTEM">🤖 Giọng Trợ lý Mặc định (Hệ thống)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tốc độ đọc:</label>
+                        <select id="speechRateSelect" onchange="changeSpeechRate()">
+                            <option value="0.85">Chậm rãi (0.85x)</option>
+                            <option value="0.95" selected>Vừa phải, tự nhiên (0.95x - Chuẩn)</option>
+                            <option value="1.1">Nhanh gọn (1.1x)</option>
+                            <option value="1.25">Cực nhanh (1.25x - Giờ cao điểm)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Mẫu câu thông báo:</label>
+                        <select id="webAudioMode" onchange="changeAudioMode()">
+                            <option value="TING_AND_AMOUNT">"Đã nhận [số tiền]" (Ngắn gọn MoMo)</option>
+                            <option value="FULL_MOMO">"Bạn vừa nhận được [số tiền]" (Chuẩn Ví MoMo)</option>
+                            <option value="BANK_AND_AMOUNT">"[Tên ngân hàng], nhận [số tiền]"</option>
+                            <option value="TING_ONLY">Chỉ phát tiếng chuông Ting</option>
+                        </select>
+                    </div>
+
+                    <button class="btn-secondary" onclick="testSpeaker()">
+                        🔊 Bấm để nghe thử giọng đã chọn
                     </button>
                 </div>
 
-                <!-- Tùy chỉnh thông báo -->
+                <!-- Tùy chỉnh thông báo tự nhập -->
                 <div class="custom-sim-card">
                     <h4>Bắn thông báo tự nhập</h4>
                     <div class="form-group">
@@ -99,22 +131,6 @@
                     <button class="btn-primary" onclick="simulateCustomPush()">
                         <span>Bắn thông báo nhận tiền</span>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                    </button>
-                </div>
-
-                <!-- Cài đặt loa & giọng đọc -->
-                <div class="audio-settings-card">
-                    <h4>Loa & Giọng đọc tiếng Việt (TTS)</h4>
-                    <div class="audio-toggle-row">
-                        <span>Chế độ âm thanh:</span>
-                        <select id="webAudioMode" onchange="changeAudioMode()">
-                            <option value="TING_AND_AMOUNT">Chuông Ting + Đọc số tiền</option>
-                            <option value="BANK_AND_AMOUNT">Tên ngân hàng + Đọc số tiền</option>
-                            <option value="TING_ONLY">Chỉ phát chuông Ting</option>
-                        </select>
-                    </div>
-                    <button class="btn-secondary" onclick="testSpeaker()">
-                        🔊 Bấm để nghe thử loa Ting MoMo
                     </button>
                 </div>
             </div>
@@ -204,9 +220,9 @@
                                 <span class="momo-action-label">Lịch sử GD</span>
                             </button>
 
-                            <button class="momo-action-item" onclick="navigateTo('Stats')">
-                                <div class="momo-action-icon act-stats">📊</div>
-                                <span class="momo-action-label">Thống kê</span>
+                            <button class="momo-action-item" onclick="navigateTo('Settings')">
+                                <div class="momo-action-icon act-stats">🎙️</div>
+                                <span class="momo-action-label">Chọn giọng</span>
                             </button>
                         </div>
 
@@ -371,55 +387,37 @@
                         </div>
                     </div>
 
-                    <!-- SCREEN 7: STATS -->
-                    <div id="screenStats" class="screen-view">
-                        <div class="screen-header-pink">
-                            <button class="btn-back-white" onclick="navigateTo('Home')">←</button>
-                            <span>Báo cáo doanh thu</span>
-                            <div></div>
-                        </div>
-
-                        <div class="momo-balance-card" style="margin-top: 16px;">
-                            <div class="balance-left">
-                                <small>Tổng doanh thu</small>
-                                <div class="balance-value" id="statsTotalRevenue">0 đ</div>
-                            </div>
-                            <div class="balance-right">
-                                <small>Tổng đơn</small>
-                                <strong id="statsTotalCount">0 đơn</strong>
-                            </div>
-                        </div>
-
-                        <div class="momo-section-card">
-                            <div class="section-head"><h3>Phân bổ theo ngân hàng / ví</h3></div>
-                            <div id="statsBankList" class="tx-list"></div>
-                        </div>
-                    </div>
-
-                    <!-- SCREEN 8: SETTINGS -->
+                    <!-- SCREEN 7: SETTINGS & CHỌN GIỌNG ĐỌC -->
                     <div id="screenSettings" class="screen-view">
                         <div class="screen-header-pink">
                             <button class="btn-back-white" onclick="navigateTo('Home')">←</button>
-                            <span>Cài đặt hệ thống</span>
+                            <span>Cài đặt giọng đọc tiếng Việt</span>
                             <div></div>
                         </div>
 
                         <div class="momo-section-card" style="margin-top: 16px;">
-                            <div class="tx-row-momo">
-                                <div>
-                                    <strong>Quyền đọc thông báo</strong>
-                                    <small style="display: block; color: var(--text-muted);">Tự động bắt giao dịch</small>
-                                </div>
-                                <span style="color: var(--momo-green); font-weight: 800;">ĐANG BẬT</span>
+                            <div class="form-group" style="margin-bottom: 12px;">
+                                <label style="color: var(--text-dark); font-weight: 800;">Chọn giọng đọc tiếng Việt:</label>
+                                <select id="phoneVoiceSelect" onchange="syncVoiceFromPhone(this.value)">
+                                    <option value="FEMALE_NORTH">👩 Nữ Miền Bắc (Chuẩn MoMo)</option>
+                                    <option value="MALE_NORTH">👨 Nam Miền Bắc (Trầm ấm)</option>
+                                    <option value="FEMALE_SOUTH">👩 Nữ Miền Nam (Dễ thương)</option>
+                                    <option value="MALE_SOUTH">👨 Nam Miền Nam (Hào sảng)</option>
+                                </select>
                             </div>
 
-                            <div class="tx-row-momo">
-                                <div>
-                                    <strong>Loa thông báo</strong>
-                                    <small style="display: block; color: var(--text-muted);">Chuông Ting MoMo + Đọc tiếng Việt</small>
-                                </div>
-                                <button class="btn-secondary" onclick="testSpeaker()">Thử loa</button>
+                            <div class="form-group" style="margin-bottom: 12px;">
+                                <label style="color: var(--text-dark); font-weight: 800;">Tốc độ giọng đọc:</label>
+                                <select id="phoneSpeedSelect" onchange="syncSpeedFromPhone(this.value)">
+                                    <option value="0.85">Chậm (0.85x)</option>
+                                    <option value="0.95" selected>Vừa phải (0.95x - Chuẩn)</option>
+                                    <option value="1.15">Nhanh (1.15x)</option>
+                                </select>
                             </div>
+
+                            <button class="btn-primary" style="width: 100%; margin-top: 6px;" onclick="testSpeaker()">
+                                🔊 Nghe thử giọng đọc ngay
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -438,13 +436,9 @@
                         <span class="nav-icon">📜</span>
                         <span class="nav-label">Lịch sử</span>
                     </button>
-                    <button class="nav-item" onclick="navigateTo('Stats')" id="navStats">
-                        <span class="nav-icon">📊</span>
-                        <span class="nav-label">Thống kê</span>
-                    </button>
                     <button class="nav-item" onclick="navigateTo('Settings')" id="navSettings">
-                        <span class="nav-icon">⚙️</span>
-                        <span class="nav-label">Cài đặt</span>
+                        <span class="nav-icon">🎙️</span>
+                        <span class="nav-label">Giọng đọc</span>
                     </button>
                 </nav>
             </div>

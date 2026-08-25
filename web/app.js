@@ -1,5 +1,5 @@
 // =========================================================
-// TingPay – Giao Diện & Trải Nghiệm Phong Cách MoMo
+// TingPay – Giao Diện MoMo & Bộ Quản Lý Giọng Đọc Tiếng Việt
 // =========================================================
 
 const state = {
@@ -20,6 +20,8 @@ const state = {
     },
     posInput: "",
     createPayInput: "",
+    voiceType: "FEMALE_NORTH", // FEMALE_NORTH, MALE_NORTH, FEMALE_SOUTH, MALE_SOUTH, AUTO_SYSTEM
+    speechRate: 0.95,
     audioMode: "TING_AND_AMOUNT",
     transactions: [],
     audioContext: null
@@ -36,31 +38,31 @@ function playMomoTingSound() {
         const ctx = state.audioContext;
         if (ctx.state === 'suspended') ctx.resume();
 
-        // Nốt Ting thứ 1 (E6 - 1318Hz)
+        // Nốt Ting 1
         const osc1 = ctx.createOscillator();
         const gain1 = ctx.createGain();
         osc1.type = 'sine';
         osc1.frequency.setValueAtTime(1318, ctx.currentTime);
-        gain1.gain.setValueAtTime(0.6, ctx.currentTime);
-        gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+        gain1.gain.setValueAtTime(0.65, ctx.currentTime);
+        gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
         osc1.connect(gain1);
         gain1.connect(ctx.destination);
         osc1.start(ctx.currentTime);
-        osc1.stop(ctx.currentTime + 0.25);
+        osc1.stop(ctx.currentTime + 0.22);
 
-        // Nốt Ting thứ 2 ngân vang (A6 - 1760Hz) sau 120ms
+        // Nốt Ting 2 ngân vang
         setTimeout(() => {
             const osc2 = ctx.createOscillator();
             const gain2 = ctx.createGain();
             osc2.type = 'sine';
             osc2.frequency.setValueAtTime(1760, ctx.currentTime);
-            gain2.gain.setValueAtTime(0.7, ctx.currentTime);
-            gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+            gain2.gain.setValueAtTime(0.75, ctx.currentTime);
+            gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
             osc2.connect(gain2);
             gain2.connect(ctx.destination);
             osc2.start(ctx.currentTime);
-            osc2.stop(ctx.currentTime + 0.5);
-        }, 120);
+            osc2.stop(ctx.currentTime + 0.45);
+        }, 110);
 
     } catch (e) {
         console.warn("Lỗi Web Audio", e);
@@ -68,21 +70,37 @@ function playMomoTingSound() {
 }
 
 // -------------------------------------------------------------
-// Bộ Đọc Giọng Nói Tiếng Việt Chuẩn Xác (TTS)
+// Bộ Quản Lý Đa Dạng Giọng Đọc Tiếng Việt
 // -------------------------------------------------------------
-let cachedVietnameseVoice = null;
+let availableVoices = [];
 
-function initVietnameseVoices() {
+function loadVoices() {
     if (!('speechSynthesis' in window)) return;
-    const voices = window.speechSynthesis.getVoices();
-    cachedVietnameseVoice = voices.find(v => v.lang === 'vi-VN' || v.lang === 'vi_VN') ||
-                            voices.find(v => v.lang.toLowerCase().startsWith('vi')) ||
-                            voices.find(v => v.name.toLowerCase().includes('vietnam') || v.name.toLowerCase().includes('tiếng việt'));
+    availableVoices = window.speechSynthesis.getVoices();
 }
 
 if ('speechSynthesis' in window) {
-    initVietnameseVoices();
-    window.speechSynthesis.onvoiceschanged = initVietnameseVoices;
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+}
+
+function getBestVietnameseVoice(genderPreference) {
+    if (availableVoices.length === 0) loadVoices();
+    const viVoices = availableVoices.filter(v => v.lang === 'vi-VN' || v.lang === 'vi_VN' || v.lang.toLowerCase().startsWith('vi'));
+
+    if (viVoices.length === 0) {
+        return availableVoices.find(v => v.name.toLowerCase().includes('vietnam') || v.name.toLowerCase().includes('tiếng việt')) || null;
+    }
+
+    if (genderPreference === 'MALE') {
+        const male = viVoices.find(v => v.name.toLowerCase().includes('nam') || v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('minh'));
+        if (male) return male;
+    } else if (genderPreference === 'FEMALE') {
+        const female = viVoices.find(v => v.name.toLowerCase().includes('nu') || v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('my') || v.name.toLowerCase().includes('mai'));
+        if (female) return female;
+    }
+
+    return viVoices[0];
 }
 
 function speakText(text) {
@@ -92,11 +110,38 @@ function speakText(text) {
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = 'vi-VN';
 
-    if (!cachedVietnameseVoice) initVietnameseVoices();
-    if (cachedVietnameseVoice) utter.voice = cachedVietnameseVoice;
+    // Cấu hình Cao độ (Pitch) và Tốc độ (Rate) theo loại giọng chọn
+    let pitch = 1.0;
+    let rate = state.speechRate;
+    let gender = 'FEMALE';
 
-    utter.rate = 0.95;
-    utter.pitch = 1.0;
+    switch (state.voiceType) {
+        case 'FEMALE_NORTH':
+            pitch = 1.15; // Nữ Bắc thanh thoát
+            gender = 'FEMALE';
+            break;
+        case 'MALE_NORTH':
+            pitch = 0.85; // Nam Bắc trầm ấm
+            gender = 'MALE';
+            break;
+        case 'FEMALE_SOUTH':
+            pitch = 1.25; // Nữ Nam dễ thương, cao hơn
+            gender = 'FEMALE';
+            break;
+        case 'MALE_SOUTH':
+            pitch = 0.80; // Nam Nam hào sảng
+            gender = 'MALE';
+            break;
+        default:
+            pitch = 1.0;
+            break;
+    }
+
+    const voice = getBestVietnameseVoice(gender);
+    if (voice) utter.voice = voice;
+
+    utter.pitch = pitch;
+    utter.rate = rate;
     utter.volume = 1.0;
 
     window.speechSynthesis.speak(utter);
@@ -109,16 +154,28 @@ function notifyAudio(amount, bankName) {
 
     setTimeout(() => {
         const words = numberToVietnameseWords(amount);
-        let speech = `Đã nhận ${words}`;
-        if (state.audioMode === "BANK_AND_AMOUNT" && bankName) {
-            speech = `${bankName}, nhận ${words}`;
+        let speech = "";
+
+        switch (state.audioMode) {
+            case "FULL_MOMO":
+                speech = `Bạn vừa nhận được ${words}`;
+                break;
+            case "BANK_AND_AMOUNT":
+                const bName = bankName === "MoMo" ? "Ví MoMo" : bankName;
+                speech = `${bName}, nhận ${words}`;
+                break;
+            case "TING_AND_AMOUNT":
+            default:
+                speech = `Đã nhận ${words}`;
+                break;
         }
+
         speakText(speech);
     }, 550);
 }
 
 // -------------------------------------------------------------
-// Chuyển Đổi Số Tiền Thành Chữ Tiếng Việt
+// Chuyển Đổi Số Tiền Thành Chữ Tiếng Việt Chuẩn Xác
 // -------------------------------------------------------------
 function numberToVietnameseWords(amount) {
     if (amount === 0) return "không đồng";
@@ -179,7 +236,7 @@ function numberToVietnameseWords(amount) {
 }
 
 // -------------------------------------------------------------
-// Sinh Chuỗi VietQR NAPAS 247 Chuẩn EMVCo
+// Sinh Mã VietQR EMVCo NAPAS 247
 // -------------------------------------------------------------
 function crc16(data) {
     let crc = 0xFFFF;
@@ -220,8 +277,36 @@ function generateVietQrPayload(bin, acc, amount, message) {
 }
 
 // -------------------------------------------------------------
-// Điều Hướng & Cập Nhật Giao Diện
+// Điều Hướng & Cài Đặt Giọng Đọc
 // -------------------------------------------------------------
+function changeVoiceType() {
+    state.voiceType = document.getElementById('voiceTypeSelect').value;
+    const phoneSel = document.getElementById('phoneVoiceSelect');
+    if (phoneSel) phoneSel.value = state.voiceType;
+}
+
+function syncVoiceFromPhone(val) {
+    state.voiceType = val;
+    const sideSel = document.getElementById('voiceTypeSelect');
+    if (sideSel) sideSel.value = val;
+}
+
+function changeSpeechRate() {
+    state.speechRate = parseFloat(document.getElementById('speechRateSelect').value);
+    const phoneSpd = document.getElementById('phoneSpeedSelect');
+    if (phoneSpd) phoneSpd.value = String(state.speechRate);
+}
+
+function syncSpeedFromPhone(val) {
+    state.speechRate = parseFloat(val);
+    const sideSpd = document.getElementById('speechRateSelect');
+    if (sideSpd) sideSpd.value = val;
+}
+
+function changeAudioMode() {
+    state.audioMode = document.getElementById('webAudioMode').value;
+}
+
 function navigateTo(screenId) {
     document.querySelectorAll('.screen-view').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -310,7 +395,6 @@ function updateDashboard() {
     revEl.innerText = state.showRevenue ? formatVnd(state.todayRevenue) : "••••••• đ";
     document.getElementById('homeTxCount').innerText = `${state.txCount} đơn`;
 
-    // Cập nhật danh sách giao dịch MoMo
     const recentList = document.getElementById('homeRecentList');
     if (state.transactions.length === 0) {
         recentList.innerHTML = `<div class="empty-state">Chưa có giao dịch nào hôm nay</div>`;
@@ -331,7 +415,6 @@ function updateDashboard() {
         `).join('');
     }
 
-    // Cập nhật Lịch sử đầy đủ
     const fullList = document.getElementById('historyFullList');
     if (fullList) {
         if (state.transactions.length === 0) {
@@ -353,33 +436,9 @@ function updateDashboard() {
             `).join('');
         }
     }
-
-    // Cập nhật Thống kê
-    document.getElementById('statsTotalRevenue').innerText = formatVnd(state.todayRevenue);
-    document.getElementById('statsTotalCount').innerText = `${state.txCount} đơn`;
-
-    const bankMap = {};
-    state.transactions.filter(t => t.type === 'CREDIT').forEach(t => {
-        bankMap[t.bankCode] = (bankMap[t.bankCode] || 0) + t.amount;
-    });
-
-    const statsBankList = document.getElementById('statsBankList');
-    if (Object.keys(bankMap).length === 0) {
-        statsBankList.innerHTML = `<div class="empty-state">Chưa có dữ liệu ngân hàng</div>`;
-    } else {
-        statsBankList.innerHTML = Object.entries(bankMap).map(([bank, total]) => `
-            <div class="tx-row-momo">
-                <div class="tx-momo-left">
-                    <div class="tx-momo-badge">${bank.slice(0, 4)}</div>
-                    <div><strong>${bank}</strong></div>
-                </div>
-                <div class="tx-momo-amount amount-plus">${formatVnd(total)}</div>
-            </div>
-        `).join('');
-    }
 }
 
-// Bàn phím thu ngân
+// Keypad POS
 function posPress(val) {
     if (state.posInput.length < 9) {
         state.posInput += val;
@@ -424,7 +483,6 @@ function renderPosQr() {
     });
 }
 
-// Bàn phím tạo đơn
 function createPayPress(val) {
     if (state.createPayInput.length < 9) {
         state.createPayInput += val;
@@ -489,10 +547,6 @@ function testSpeaker() {
     notifyAudio(350000, "Ví MoMo");
 }
 
-function changeAudioMode() {
-    state.audioMode = document.getElementById('webAudioMode').value;
-}
-
 // Khởi tạo
 setInterval(() => {
     const now = new Date();
@@ -501,7 +555,7 @@ setInterval(() => {
 }, 1000);
 
 window.addEventListener('DOMContentLoaded', () => {
-    initVietnameseVoices();
+    loadVoices();
     updateDashboard();
     renderPosQr();
 });
